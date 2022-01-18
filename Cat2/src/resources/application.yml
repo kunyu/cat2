@@ -1,0 +1,112 @@
+server:
+  port: 9090
+
+logging:
+  file: springbootdemo.log
+  level:
+    root: DEBUG
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+spring:
+  http:
+    encoding:
+      charset: utf-8
+      enabled: true
+      force: true
+  tomcat:
+    uri-encoding: UTF-8
+  mvc:
+    servlet:
+      load-on-startup: 100
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    platform: mysql
+    url: jdbc:mysql://82.156.242.246:3306/crazyloongcat?useUnicode=true&characterEncoding=utf8&autoReconnect=true&useSSL=false
+    username: cat
+    password: P@ssw0rd@
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT1FROMDUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    filters: stat,wall,log4j
+    logSlowSql: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+ssh:
+  host: 176.122.165.184
+  port: 28670
+  user: root
+  password: 47ktFV36xxtF
+tushare:
+  apiurl: http://api.waditu.com
+  token: 1c104d9088dc9a91e692e8b8e6a45de6d168937a50dae916d63d265e
+snowflake:
+  workid: 1
+  datacenterid-trade_cal: 1
+
+zmhainan:
+  host: m.hndfbg.com
+  
+
+rishang:
+  host: srmemberapp2.srgow.com
+  user:
+    userList[0]:
+      name: 17600133533
+      pwd:
+    userList[1]:
+      name: 18333187054
+      pwd:
+    userList[2]:
+      name: 18333189522
+      pwd:
+    userList[3]:
+      name: 18515340690
+      pwd:
+    userList[4]:
+      name: 15511440626
+      pwd:
+    userList[5]:
+      name: 17710244030
+      pwd:
+    userList[6]:
+      name: 15303406056
+      pwd:
+    userList[7]:
+      name: 15075630657
+      pwd:
+    userList[8]:
+      name: 13581563596
+      pwd:
+    userList[9]:
+      name: 13146930213
+      pwd:
+    userList[10]:
+      name: 13753972792
+      pwd:
+    userList[11]:
+      name: 15614233412
+      pwd:
+  url:
+    addCart: /goods/shopcart
+    createOrder: /user/prevsubmitorder
+    auth: /user/authtraveller3
+    submitOrder: /user/submitorder
+    pay: /order/pay/
+    getCart: /user/cart
+    login: /user/loginv3
+    wishs: /user/wishs/
+    getvipcouponv2: /rights/getvipcouponv2
+    mallnew: /order/mallnew/
