@@ -4,13 +4,12 @@ import com.github.lianjiatech.retrofit.spring.boot.annotation.RetrofitScan;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
 
-@MapperScan("com.crazyloong.cat.mybatis.dao")
+@MapperScan("com.crazyloong.cat.rishang.mybatis.dao")
 @RetrofitScan("com.crazyloong.cat")
 
 public class SampleController {

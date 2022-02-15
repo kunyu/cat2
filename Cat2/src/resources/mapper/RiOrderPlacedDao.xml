@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.crazyloong.cat.mybatis.dao.RiOrderPlacedDao">
+<mapper namespace="com.crazyloong.cat.rishang.mybatis.dao.RiOrderPlacedDao">
 
-    <resultMap type="com.crazyloong.cat.mybatis.entity.RiOrderPlaced" id="RiOrderPlacedMap">
+    <resultMap type="com.crazyloong.cat.rishang.mybatis.entity.RiOrderPlaced" id="RiOrderPlacedMap">
         <result property="orderCode" column="order_code" jdbcType="VARCHAR"/>
         <result property="orderUser" column="order_user" jdbcType="VARCHAR"/>
         <result property="addressName" column="address_name" jdbcType="VARCHAR"/>
