@@ -62,43 +62,6 @@ zmhainan:
 
 rishang:
   host: srmemberapp2.srgow.com
-  user:
-    userList[0]:
-      name: 17600133533
-      pwd:
-    userList[1]:
-      name: 18333187054
-      pwd:
-    userList[2]:
-      name: 18333189522
-      pwd:
-    userList[3]:
-      name: 18515340690
-      pwd:
-    userList[4]:
-      name: 15511440626
-      pwd:
-    userList[5]:
-      name: 17710244030
-      pwd:
-    userList[6]:
-      name: 15303406056
-      pwd:
-    userList[7]:
-      name: 15075630657
-      pwd:
-    userList[8]:
-      name: 13581563596
-      pwd:
-    userList[9]:
-      name: 13146930213
-      pwd:
-    userList[10]:
-      name: 13753972792
-      pwd:
-    userList[11]:
-      name: 15614233412
-      pwd:
   url:
     addCart: /goods/shopcart
     createOrder: /user/prevsubmitorder
