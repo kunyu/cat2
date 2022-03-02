@@ -3,6 +3,7 @@ package com.crazyloong.cat.rishang.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.crazyloong.cat.api.ApiController;
 import com.crazyloong.cat.api.R;
+import com.crazyloong.cat.rishang.constant.PlaceOrderType;
 import com.crazyloong.cat.rishang.dto.*;
 import com.crazyloong.cat.rishang.mybatis.entity.RiOrderAddress;
 import com.crazyloong.cat.rishang.mybatis.entity.RiOrderConvolutionCode;
@@ -137,27 +138,33 @@ public class RiShangController extends ApiController {
                 abiids.add(Integer.parseInt(abiidList.get(j)));
                 riShangService.addCart(Integer.parseInt(abiidList.get(j)),Integer.parseInt(numList.get(j)),riOrderReq.getToken());
             }
-            // 获取优惠券信息
-            RiOrderConvolutionCode selectCase = new RiOrderConvolutionCode();
-            selectCase.setIsInuse(0);
-            selectCase.setIsUsed(0);
-            List<RiOrderConvolutionCode> codeList  = riOrderConvolutionCodeService.listCodes(selectCase);
-            RiOrderConvolutionCode codeEnd = null;
             VipCodeRsp vipCode = null;
-            for(RiOrderConvolutionCode code: codeList){
-                vipCode = riShangService.getVipCode(riOrderReq.getToken(),code.getCode());
-                // 如果优惠码无效则更新状态继续查询
-                if (vipCode == null) {
-                    code.setIsInuse(1);
-                    riOrderConvolutionCodeService.saveOrUpdate(code);
-                } else {
-                    codeEnd = code;
-                    code.setIsInuse(1);
-                    code.setIsUsed(1);
-                    riOrderConvolutionCodeService.saveOrUpdate(code);
-                    break;
+            if (PlaceOrderType.publicCode.code.equals(riOrderReq.getType())) {
+                // 获取优惠券信息
+                RiOrderConvolutionCode selectCase = new RiOrderConvolutionCode();
+                selectCase.setIsInuse(0);
+                selectCase.setIsUsed(0);
+                List<RiOrderConvolutionCode> codeList  = riOrderConvolutionCodeService.listCodes(selectCase);
+                RiOrderConvolutionCode codeEnd = null;
+                for(RiOrderConvolutionCode code: codeList){
+                    vipCode = riShangService.getVipCode(riOrderReq.getToken(),code.getCode());
+                    // 如果优惠码无效则更新状态继续查询
+                    if (vipCode == null) {
+                        code.setIsInuse(1);
+                        riOrderConvolutionCodeService.saveOrUpdate(code);
+                    } else {
+                        codeEnd = code;
+                        code.setIsInuse(1);
+                        code.setIsUsed(1);
+                        riOrderConvolutionCodeService.saveOrUpdate(code);
+                        break;
+                    }
                 }
+            } else {
+                // 如果下单方式为用户优惠券则获取用户自己的优惠券
+                vipCode = riShangService.getVipCodeMyself(riOrderReq.getToken(),riOrderReq.getPreferentialSum());
             }
+
             if (vipCode == null) {
                 throw new RuntimeException("无可用优惠券！");
             }
@@ -172,7 +179,7 @@ public class RiShangController extends ApiController {
                 throw new RuntimeException("生成订单失败！");
             }
             // 提交订单
-            submitOrderReq.setCouponscode(codeEnd.getCode());
+            submitOrderReq.setCouponscode(vipCode.getCode());
             submitOrderReq.setAbiids(abiids);
             submitOrderReq.setWishid(createOrderRsp.getWishid());
             Integer riReturnRsp = riShangService.submitOrder(riOrderReq.getToken(),submitOrderReq);

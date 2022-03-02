@@ -2,6 +2,7 @@ package com.crazyloong.cat.rishang.service.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.TypeReference;
 import com.crazyloong.cat.rishang.dto.*;
 import com.crazyloong.cat.execption.RiBizExecption;
 import com.crazyloong.cat.pojo.GetBody;
@@ -137,12 +138,43 @@ public class RiShangServiceImpl implements RiShangService {
             if (entity != null) {
                 String  entityStr= EntityUtils.toString(entity,"utf-8");
                 logger.debug("entityStr:"+entityStr);
-                RiReturnRsp<JSONObject> vipcode =  JSONObject.parseObject(entityStr,RiReturnRsp.class);
-                JSONObject vipJsonObject = vipcode.getData();
-                if (vipJsonObject != null) {
-                    return vipJsonObject.toJavaObject(VipCodeRsp.class);
-                }
+                RiReturnRsp<VipCodeRsp> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<VipCodeRsp>>(){});
+                return vipcode.getData();
 
+            }
+        } catch (Exception e){
+            logger.error("获取优惠券信息 失败",e);
+            throw new RiBizExecption("获取优惠券信息 失败",e);
+        }
+        return null;
+    }
+
+    /**
+     * 获取当前登录用户的优惠券
+     * @return
+     */
+    public VipCodeRsp getVipCodeMyself(String token,String preferentialSum){
+        HttpUtil httpUtil = new HttpUtil();
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(token);
+        getBody.setAPI(environment.getProperty("rishang.url.getVipCod"));
+        getBody.setHost(environment.getProperty("rishang.host"));
+        HttpEntity entity;
+        try {
+            entity = httpUtil.doGet(getBody);
+            if (entity != null) {
+                String  entityStr= EntityUtils.toString(entity,"utf-8");
+                logger.debug("entityStr:"+entityStr);
+                RiReturnRsp<List<VipCodeRsp>> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<List<VipCodeRsp>>>(){});
+                List<VipCodeRsp> vipCodeRspList = vipcode.getData();
+                if (vipCodeRspList != null) {
+                    for (int i = 0; i < vipCodeRspList.size(); i++) {
+                        if (vipCodeRspList.get(i).getTitle().contains(preferentialSum)) {
+                            return vipCodeRspList.get(i);
+                        }
+                    }
+
+                }
             }
         } catch (Exception e){
             logger.error("获取优惠券信息 失败",e);

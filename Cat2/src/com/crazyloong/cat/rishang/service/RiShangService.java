@@ -54,6 +54,12 @@ public interface RiShangService {
     VipCodeRsp getVipCode(String token,String code);
 
     /**
+     * 获取当前登录用户的优惠券
+     * @return
+     */
+    VipCodeRsp getVipCodeMyself(String token,String preferentialSum);
+
+    /**
      * @Description: 获取订单信息
      * @Author: YPLI
      * @Date: 2022/1/8 0008 21:58
@@ -83,4 +89,7 @@ public interface RiShangService {
      * com.crazyloong.cat.rishang.dto.RiReturnRsp<com.crazyloong.cat.rishang.dto.WishRsp>
      **/
     RiReturnRsp<List<Object>> getWishs(String token, Integer state);
+
+
+
 }

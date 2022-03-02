@@ -73,3 +73,4 @@ rishang:
     wishs: /user/wishs/
     getvipcouponv2: /rights/getvipcouponv2
     mallnew: /order/mallnew/
+    getVipCod: /rights/getvipcoupons
