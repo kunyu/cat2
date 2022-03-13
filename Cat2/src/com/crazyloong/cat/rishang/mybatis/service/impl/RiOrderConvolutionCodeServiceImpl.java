@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.crazyloong.cat.rishang.mybatis.dao.RiOrderConvolutionCodeDao;
 import com.crazyloong.cat.rishang.mybatis.entity.RiOrderConvolutionCode;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderConvolutionCodeService;
+import com.mysql.jdbc.StringUtils;
+import org.jsoup.helper.StringUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,8 +22,15 @@ public class RiOrderConvolutionCodeServiceImpl extends ServiceImpl<RiOrderConvol
     @Override
     public List<RiOrderConvolutionCode> listCodes(RiOrderConvolutionCode code){
         QueryWrapper<RiOrderConvolutionCode> wrapper = new QueryWrapper<RiOrderConvolutionCode>();
-        wrapper.eq("is_inuse",code.getIsInuse());
-        wrapper.eq("is_used",code.getIsUsed());
+        if (code.getIsInuse() != null) {
+            wrapper.eq("is_inuse",code.getIsInuse());
+        }
+        if (code.getIsUsed() != null) {
+            wrapper.eq("is_inuse",code.getIsUsed());
+        }
+        if (!StringUtils.isNullOrEmpty(code.getInputTime())) {
+            wrapper.like("input_time",code.getInputTime());
+        }
         return this.list(wrapper);
     }
 }

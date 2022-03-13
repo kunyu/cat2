@@ -9,6 +9,10 @@ public class RiOrderReq extends RiReq{
      */
     private String phoneId;
     /**
+    * 下订单的用户
+    */
+    private String phone;
+    /**
      * 下订单的地址Id
      */
     private String addressId;

@@ -1,32 +1,48 @@
 package com.crazyloong.cat.rishang.service.impl;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
+import com.crazyloong.cat.api.R;
+import com.crazyloong.cat.rishang.constant.PlaceOrderType;
+import com.crazyloong.cat.rishang.constant.RiShangURL;
 import com.crazyloong.cat.rishang.dto.*;
 import com.crazyloong.cat.execption.RiBizExecption;
 import com.crazyloong.cat.pojo.GetBody;
 import com.crazyloong.cat.pojo.PostBody;
+import com.crazyloong.cat.rishang.mybatis.entity.RiOrderAddress;
+import com.crazyloong.cat.rishang.mybatis.entity.RiOrderConvolutionCode;
+import com.crazyloong.cat.rishang.mybatis.entity.RiOrderPhone;
+import com.crazyloong.cat.rishang.mybatis.entity.RiOrderPlaced;
+import com.crazyloong.cat.rishang.mybatis.service.RiOrderAddressService;
+import com.crazyloong.cat.rishang.mybatis.service.RiOrderConvolutionCodeService;
+import com.crazyloong.cat.rishang.mybatis.service.RiOrderPlacedService;
 import com.crazyloong.cat.rishang.service.RiShangService;
 import com.crazyloong.cat.util.HttpUtil;
 import org.apache.http.HttpEntity;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
 public class RiShangServiceImpl implements RiShangService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
+    // 日上app 地址
+    //@Value("${rishang.host}")
+    private static String RISHANG_HOST = "srmemberapp2.srgow.com";
     @Autowired
-    Environment environment;
+    private RiOrderConvolutionCodeService riOrderConvolutionCodeService;
+    @Autowired
+    private RiOrderAddressService addressService;
+    @Autowired
+    private RiOrderPlacedService riOrderPlacedService;
+
 
     /**
      * 添加购物车  制定商品编号 添加数量 添加用户
@@ -38,15 +54,14 @@ public class RiShangServiceImpl implements RiShangService {
         HttpUtil httpUtil = new HttpUtil();
         PostBody<Map<String,Object>> postBody = new PostBody();
         postBody.setAuthorization(pwd);
-        postBody.setAPI(environment.getProperty("rishang.url.addCart"));
-        postBody.setHost(environment.getProperty("rishang.host"));
-        Map<String,Object> paramters = new HashMap<String,Object>();
+        postBody.setAPI(RiShangURL.RISHANG_ADDCART.code);
+        postBody.setHost(RISHANG_HOST);
+        Map<String,Object> paramters = new HashMap<>();
         paramters.put("abiid",abiId);
         paramters.put("num",num);
         postBody.setParamters(paramters);
-        HttpEntity entity;
         try {
-            entity = httpUtil.doPost(postBody);
+            String entity = httpUtil.doPost(postBody);
             if (entity != null) {
                 return true;
             }
@@ -69,50 +84,21 @@ public class RiShangServiceImpl implements RiShangService {
         HttpUtil httpUtil = new HttpUtil();
         PostBody<CreateOrderReq> postBody = new PostBody<>();
         postBody.setAuthorization(token);
-        postBody.setAPI(environment.getProperty("rishang.url.createOrder"));
-        postBody.setHost(environment.getProperty("rishang.host"));
+        postBody.setAPI(RiShangURL.RISHANG_CREATE_ORDER.code);
+        postBody.setHost(RISHANG_HOST);
         postBody.setParamters(req);
-        HttpEntity entity;
         try {
-            entity = httpUtil.doPost(postBody);
-            if (entity != null) {
-                String  entityStr= EntityUtils.toString(entity,"utf-8");
-                logger.debug("entityStr:"+entityStr);
-                RiReturnRsp<JSONObject> createOrderRsp = JSONObject.parseObject(entityStr,RiReturnRsp.class);
+            String entityStr = httpUtil.doPost(postBody);
+            if (entityStr != null) {
+                RiReturnRsp<CreateOrderRsp> createOrderRsp = JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<CreateOrderRsp>>(){});
                 CheckFail(createOrderRsp);
-                return createOrderRsp.getData().toJavaObject(CreateOrderRsp.class);
+                return createOrderRsp.getData();
             }
         } catch (Exception e){
             logger.error("生成订单处理异常:",e);
             throw new RiBizExecption("生成订单处理异常 失败",e);
         }
         return null;
-    }
-
-    @Override
-    public boolean auth(String pwd) {
-        HttpUtil httpUtil = new HttpUtil();
-        PostBody postBody = new PostBody();
-        postBody.setAuthorization(pwd);
-        postBody.setAPI(environment.getProperty("rishang.url.auth"));
-        postBody.setHost(environment.getProperty("rishang.host"));
-        Map<String,Object> paramters = new HashMap<String,Object>();
-        paramters.put("flightno","K1186");
-        paramters.put("seat","");
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        paramters.put("travellertime",sdf.format(new Date()));
-        paramters.put("type",4);
-        postBody.setParamters(paramters);
-        HttpEntity entity;
-        try {
-            entity = httpUtil.doPost(postBody);
-            if (entity != null) {
-                return true;
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        return false;
     }
 
     /**
@@ -127,20 +113,16 @@ public class RiShangServiceImpl implements RiShangService {
         HttpUtil httpUtil = new HttpUtil();
         GetBody getBody = new GetBody();
         getBody.setAuthorization(token);
-        getBody.setAPI(environment.getProperty("rishang.url.getvipcouponv2"));
-        getBody.setHost(environment.getProperty("rishang.host"));
+        getBody.setAPI(RiShangURL.RISHANG_GETVIPCOUPONV2.code);
+        getBody.setHost(RISHANG_HOST);
         Map<String, Object> paramters = new HashMap<>();
         paramters.put("code",code);
         getBody.setParamters(paramters);
-        HttpEntity entity;
         try {
-            entity = httpUtil.doGet(getBody);
-            if (entity != null) {
-                String  entityStr= EntityUtils.toString(entity,"utf-8");
-                logger.debug("entityStr:"+entityStr);
+            String entityStr = httpUtil.doGet(getBody);
+            if (entityStr != null) {
                 RiReturnRsp<VipCodeRsp> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<VipCodeRsp>>(){});
                 return vipcode.getData();
-
             }
         } catch (Exception e){
             logger.error("获取优惠券信息 失败",e);
@@ -157,14 +139,11 @@ public class RiShangServiceImpl implements RiShangService {
         HttpUtil httpUtil = new HttpUtil();
         GetBody getBody = new GetBody();
         getBody.setAuthorization(token);
-        getBody.setAPI(environment.getProperty("rishang.url.getVipCod"));
-        getBody.setHost(environment.getProperty("rishang.host"));
-        HttpEntity entity;
+        getBody.setAPI(RiShangURL.RISHANG_GETVIPCOD.code);
+        getBody.setHost(RISHANG_HOST);
         try {
-            entity = httpUtil.doGet(getBody);
-            if (entity != null) {
-                String  entityStr= EntityUtils.toString(entity,"utf-8");
-                logger.debug("entityStr:"+entityStr);
+            String entityStr = httpUtil.doGet(getBody);
+            if (entityStr != null) {
                 RiReturnRsp<List<VipCodeRsp>> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<List<VipCodeRsp>>>(){});
                 List<VipCodeRsp> vipCodeRspList = vipcode.getData();
                 if (vipCodeRspList != null) {
@@ -173,7 +152,6 @@ public class RiShangServiceImpl implements RiShangService {
                             return vipCodeRspList.get(i);
                         }
                     }
-
                 }
             }
         } catch (Exception e){
@@ -185,7 +163,7 @@ public class RiShangServiceImpl implements RiShangService {
 
     /**
      *
-     * @Description: 获取优惠券相关信息
+     * @Description: 获取订单信息
      * @Author: YPLI
      * @Date:
      *
@@ -195,20 +173,13 @@ public class RiShangServiceImpl implements RiShangService {
         HttpUtil httpUtil = new HttpUtil();
         GetBody getBody = new GetBody();
         getBody.setAuthorization(token);
-        getBody.setAPI(environment.getProperty("rishang.url.mallnew")+wishid);
-        getBody.setHost(environment.getProperty("rishang.host"));
-        HttpEntity entity;
+        getBody.setAPI(RiShangURL.RISHANG_MALLNEW.code+wishid);
+        getBody.setHost(RISHANG_HOST);
         try {
-            entity = httpUtil.doGet(getBody);
-            if (entity != null) {
-                String  entityStr= EntityUtils.toString(entity,"utf-8");
-                logger.debug("entityStr:"+entityStr);
-                RiReturnRsp<JSONObject> placedOrderReturn =  JSONObject.parseObject(entityStr,RiReturnRsp.class);
-                JSONObject orderJsonObject = placedOrderReturn.getData();
-                if (orderJsonObject != null) {
-                    return orderJsonObject.toJavaObject(PlacedOrderRsp.class);
-                }
-
+            String entityStr = httpUtil.doGet(getBody);
+            if (entityStr != null) {
+                RiReturnRsp<PlacedOrderRsp> placedOrderReturn =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<PlacedOrderRsp>>(){});
+                return placedOrderReturn.getData();
             }
         } catch (Exception e){
             logger.error("获取订单信息 失败",e);
@@ -234,15 +205,12 @@ public class RiShangServiceImpl implements RiShangService {
         HttpUtil httpUtil = new HttpUtil();
         PostBody<SubmitOrderReq> postBody = new PostBody();
         postBody.setAuthorization(token);
-        postBody.setAPI(environment.getProperty("rishang.url.submitOrder"));
-        postBody.setHost(environment.getProperty("rishang.host"));
+        postBody.setAPI(RiShangURL.RISHANG_SUBMITORDER.code);
+        postBody.setHost(RISHANG_HOST);
         postBody.setParamters(req);
-        HttpEntity entity;
         try {
-            entity = httpUtil.doPost(postBody);
-            if (entity != null) {
-                String  entityStr= EntityUtils.toString(entity,"utf-8");
-                logger.debug("entityStr:"+entityStr);
+            String entityStr = httpUtil.doPost(postBody);
+            if (entityStr != null) {
                 RiReturnRsp<Integer> submiReturn = JSONObject.parseObject(entityStr,RiReturnRsp.class);
                 CheckFail(submiReturn);
                 return submiReturn.getData();
@@ -252,30 +220,6 @@ public class RiShangServiceImpl implements RiShangService {
             throw new RiBizExecption("提交订单 失败",e);
         }
         return null;
-    }
-
-    @Override
-    public boolean pay(String pwd,String wishid) {
-        HttpUtil httpUtil = new HttpUtil();
-        PostBody postBody = new PostBody();
-        postBody.setAuthorization(pwd);
-        postBody.setAPI(environment.getProperty("rishang.url.pay")+wishid);
-        postBody.setHost(environment.getProperty("rishang.host"));
-        HttpEntity entity;
-        try {
-            entity = httpUtil.doPost(postBody);
-            if (entity != null) {
-                return true;
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    @Override
-    public boolean buyGoods(String user, PostBody postBody) {
-        return false;
     }
 
     /**
@@ -290,17 +234,15 @@ public class RiShangServiceImpl implements RiShangService {
         HttpUtil httpUtil = new HttpUtil();
         GetBody getBody = new GetBody();
         getBody.setAuthorization(token);
-        getBody.setAPI(environment.getProperty("rishang.url.wishs"));
-        getBody.setHost(environment.getProperty("rishang.host"));
+        getBody.setAPI(RiShangURL.RISHANG_WISHS.code);
+        getBody.setHost(RISHANG_HOST);
         Map<String, Object> paramters = new HashMap<>();
         paramters.put("state",state);
         getBody.setParamters(paramters);
         HttpEntity entity;
         try {
-            entity = httpUtil.doGet(getBody);
-            if (entity != null) {
-                String  entityStr= EntityUtils.toString(entity,"utf-8");
-                logger.debug("entityStr:"+entityStr);
+            String entityStr = httpUtil.doGet(getBody);
+            if (entityStr != null) {
                 RiReturnRsp<List<Object>> wishRsp = JSONObject.parseObject(entityStr,RiReturnRsp.class);
                 CheckFail(wishRsp);
                 return wishRsp;
@@ -308,40 +250,6 @@ public class RiShangServiceImpl implements RiShangService {
         } catch (Exception e){
             logger.error("获取我的订单信息 失败",e);
             throw new RiBizExecption("获取我的订单信息 失败",e);
-        }
-        return null;
-    }
-
-    public Map<String,Integer> getCart(String pwd){
-        HttpUtil httpUtil = new HttpUtil();
-        PostBody postBody = new PostBody();
-        postBody.setAuthorization(pwd);
-        postBody.setAPI(environment.getProperty("rishang.url.getCart"));
-        postBody.setHost(environment.getProperty("rishang.host"));
-        Map<String,Object> paramters = new HashMap<String,Object>();
-        paramters.put("v","v4");
-        paramters.put("sys","Android");
-        postBody.setParamters(paramters);
-        HttpEntity entity;
-        try {
-            entity = httpUtil.doPost(postBody);
-            if (entity != null) {
-                String  entityStr= EntityUtils.toString(entity,"utf-8");
-                System.out.println(entityStr);
-                JSONObject jb = JSONObject.parseObject(entityStr);
-                JSONObject bonded = (JSONObject)((JSONObject)jb.get("data")).get("bonded");
-                JSONArray goodInfos = (JSONArray)bonded.get("details");
-                Map<String,Integer> goods = new HashMap<>();
-                for (Iterator iterator = goodInfos.iterator(); iterator.hasNext();) {
-                    JSONObject job=(JSONObject)iterator.next();
-                    String abiid = job.get("abiid").toString();
-                    Integer num = (Integer)job.get("num");
-                    goods.put(abiid,num);
-                }
-                return goods;
-            }
-        } catch (Exception e){
-            e.printStackTrace();
         }
         return null;
     }
@@ -358,8 +266,8 @@ public class RiShangServiceImpl implements RiShangService {
         HttpUtil httpUtil = new HttpUtil();
         PostBody postBody = new PostBody();
         postBody.setAuthorization(pwd);
-        postBody.setAPI(environment.getProperty("rishang.url.login"));
-        postBody.setHost(environment.getProperty("rishang.host"));
+        postBody.setAPI(RiShangURL.RISHANG_loginv3.code);
+        postBody.setHost(RISHANG_HOST);
         Map<String,Object> paramters = new HashMap<String,Object>();
         paramters.put("tel",user);
         paramters.put("pwd", "E10ADC3949BA59ABBE56E057F20F883E");
@@ -372,10 +280,8 @@ public class RiShangServiceImpl implements RiShangService {
         HttpEntity entity;
         String tokenStr = "";
         try {
-            entity = httpUtil.doPost(postBody);
-            if (entity != null) {
-                String entityStr = EntityUtils.toString(entity,"utf-8");
-                System.out.println(entityStr);
+            String entityStr = httpUtil.doPost(postBody);
+            if (entityStr != null) {
                 JSONObject jb = JSONObject.parseObject(entityStr);
                 JSONObject token = (JSONObject)((JSONObject)jb.get("data")).get("token");
                 tokenStr = (String)token.get("token");
@@ -403,4 +309,92 @@ public class RiShangServiceImpl implements RiShangService {
         }
     }
 
+    /**
+    * 功能描述：
+    * @Param: 异步下订单
+     * @param riOrderReq
+    * @Return: void
+    * @Author:
+    * @Date: 2022/3/13 13:58
+    * @Description:
+    */
+    @Override
+    @Async("taskExecutor")
+    public void placeOrderByCode(RiOrderReq riOrderReq) throws InterruptedException {
+        RiOrderAddress address = addressService.getById(riOrderReq.getAddressId());
+        SubmitOrderReq submitOrderReq = new SubmitOrderReq();
+        submitOrderReq.setName(address.getUserName());
+        submitOrderReq.setAddress(address.getAddress());
+        submitOrderReq.setTel(address.getUserPhone());
+        submitOrderReq.setIssue("0");
+        submitOrderReq.setType(2);
+        submitOrderReq.setRightscode("-999");
+        WishPageRsp wishPageRsp = riOrderReq.getWishPageRsp();
+        // 根据订单数量 循环下单
+        for (int i = 0; i < riOrderReq.getOrderNum(); i++) {
+            List<Integer> abiids = new ArrayList<>();
+            // 加入购物车
+            List<String> abiidList = Arrays.asList(wishPageRsp.getAbiid().split(","));
+            List<String> numList = Arrays.asList(wishPageRsp.getNum().split(","));
+            for (int j = 0; j < abiidList.size(); j++) {
+                abiids.add(Integer.parseInt(abiidList.get(j)));
+                this.addCart(Integer.parseInt(abiidList.get(j)), Integer.parseInt(numList.get(j)), riOrderReq.getToken());
+            }
+            VipCodeRsp vipCode = null;
+            if (PlaceOrderType.publicCode.code.equals(riOrderReq.getType())) {
+                // 获取优惠券信息
+                RiOrderConvolutionCode selectCase = new RiOrderConvolutionCode();
+                selectCase.setIsInuse(0);
+                selectCase.setIsUsed(0);
+                List<RiOrderConvolutionCode> codeList = riOrderConvolutionCodeService.listCodes(selectCase);
+                for (RiOrderConvolutionCode code : codeList) {
+                    vipCode = this.getVipCode(riOrderReq.getToken(), code.getCode());
+                    // 如果优惠码无效则更新状态继续查询
+                    code.setIsInuse(1);
+                    if (vipCode == null) {
+                        riOrderConvolutionCodeService.saveOrUpdate(code);
+                    } else {
+                        code.setIsUsed(1);
+                        riOrderConvolutionCodeService.saveOrUpdate(code);
+                        break;
+                    }
+                }
+            } else {
+                // 如果下单方式为用户优惠券则获取用户自己的优惠券
+                vipCode = this.getVipCodeMyself(riOrderReq.getToken(), riOrderReq.getPreferentialSum());
+            }
+
+            if (vipCode == null) {
+                throw new RuntimeException("无可用优惠券！");
+            }
+            // 生成订单
+            CreateOrderReq createOrderReq = new CreateOrderReq();
+            createOrderReq.setType(2);
+            createOrderReq.setAbiids(abiids);
+            createOrderReq.setCouponscode(vipCode.getCode());
+            createOrderReq.setRightscode("-999");
+            CreateOrderRsp createOrderRsp = this.createOrder(riOrderReq.getToken(), createOrderReq);
+            if (createOrderRsp == null) {
+                throw new RuntimeException("生成订单失败！");
+            }
+            // 提交订单
+            submitOrderReq.setCouponscode(vipCode.getCode());
+            submitOrderReq.setAbiids(abiids);
+            submitOrderReq.setWishid(createOrderRsp.getWishid());
+            Integer riReturnRsp = this.submitOrder(riOrderReq.getToken(), submitOrderReq);
+            PlacedOrderRsp placedOrderRsp = this.getPlacedOrder(riOrderReq.getToken(), String.valueOf(riReturnRsp));
+            RiOrderPlaced riOrderPlaced = new RiOrderPlaced();
+            riOrderPlaced.setOrderCode(placedOrderRsp.getSjcode());
+            riOrderPlaced.setOrderUser(riOrderReq.getPhone());
+            riOrderPlaced.setAddressName(placedOrderRsp.getContacts());
+            riOrderPlaced.setAddressPhone(placedOrderRsp.getTel());
+            riOrderPlaced.setAddress(placedOrderRsp.getAddress());
+            riOrderPlaced.setGoodsName(wishPageRsp.getAbname());
+            riOrderPlaced.setGoodsNum(wishPageRsp.getNum());
+            riOrderPlaced.setGoodsPrice(String.valueOf(placedOrderRsp.getPrices()));
+            riOrderPlaced.setGoodsOprice(String.valueOf(placedOrderRsp.getOprices()));
+            riOrderPlacedService.save(riOrderPlaced);
+            Thread.sleep(1000);
+        }
+    }
 }

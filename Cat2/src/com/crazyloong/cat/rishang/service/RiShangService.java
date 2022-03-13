@@ -20,9 +20,6 @@ public interface RiShangService {
      **/
     CreateOrderRsp createOrder(String token,CreateOrderReq req);
 
-    //认证
-    boolean auth(String user);
-
     /**
      * @Description:提交订单
      * @Author: YPLI
@@ -31,18 +28,6 @@ public interface RiShangService {
      * com.crazyloong.cat.rishang.dto.RiReturnRsp<java.lang.Integer>
      **/
     Integer submitOrder(String token,SubmitOrderReq req);
-
-    // 付款
-    boolean pay(String user,String wishid);
-
-    /**
-     * @Description: 调用付款方法
-     * @Author: YPLI
-     * @Date: 2022/1/8 0008 21:02
-     * [user, postBody]
-     * boolean
-     **/
-    boolean buyGoods(String user, PostBody postBody);
 
     /**
      *
@@ -77,8 +62,6 @@ public interface RiShangService {
      **/
     String login(String user,String pwd);
 
-    Map<String,Integer> getCart(String user);
-
     PlacedOrderRsp getPlacedOrder(String token,String wishid);
 
     /**
@@ -90,6 +73,15 @@ public interface RiShangService {
      **/
     RiReturnRsp<List<Object>> getWishs(String token, Integer state);
 
-
+    /**
+    * 功能描述：
+    * @Param: 下订单
+     * @param riOrderReq 
+    * @Return: void
+    * @Author: 
+    * @Date: 2022/3/13 14:04
+    * @Description: 
+    */
+    void placeOrderByCode(RiOrderReq riOrderReq) throws InterruptedException;
 
 }

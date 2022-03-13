@@ -17,9 +17,9 @@ public class TestSort {
         for (int i = 0; i < a.length; i++) {
             System.out.print(a[i]+" ");
         }
-        /*URL url = TestSort.class.getResource("/ehcache.xml");
-        System.out.println(TestSort.class.getResource("/ehcache.xml"));
-        System.out.println(TestSort.class.getResource("/ehcache.xml"));
+        /*URL url = TestSort.class.getResource("/ehcache-catCache.xml");
+        System.out.println(TestSort.class.getResource("/ehcache-catCache.xml"));
+        System.out.println(TestSort.class.getResource("/ehcache-catCache.xml"));
         // 2. 准备配置对象
         XmlConfiguration config = new XmlConfiguration(url);
 

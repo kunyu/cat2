@@ -13,6 +13,11 @@ import java.util.List;
  */
 public interface RiOrderConvolutionCodeService extends IService<RiOrderConvolutionCode> {
 
+    /**
+     * 根据优惠券类型获取优惠券
+     * @param code
+     * @return
+     */
     List<RiOrderConvolutionCode> listCodes(RiOrderConvolutionCode code);
 
 }

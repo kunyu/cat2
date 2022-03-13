@@ -44,6 +44,19 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+  cache:
+    jcache:
+      config: classpath:config/ehcache.xml
+
+#线程池配置参数
+task:
+  pool:
+    corePoolSize: 5 #设置核心线程数
+    maxPoolSize: 20  #设置最大线程数
+    keepAliveSeconds: 300 #设置线程活跃时间（秒）
+    queueCapacity: 50 #设置队列容量
+
+
 ssh:
   host: 176.122.165.184
   port: 28670
@@ -59,18 +72,11 @@ snowflake:
 zmhainan:
   host: m.hndfbg.com
   
+httpClient:
+  connectTimeOut: 10
+  socketTimeOut: 10
+  poolsize: 20
+  idleTime: 10
 
-rishang:
-  host: srmemberapp2.srgow.com
-  url:
-    addCart: /goods/shopcart
-    createOrder: /user/prevsubmitorder
-    auth: /user/authtraveller3
-    submitOrder: /user/submitorder
-    pay: /order/pay/
-    getCart: /user/cart
-    login: /user/loginv3
-    wishs: /user/wishs/
-    getvipcouponv2: /rights/getvipcouponv2
-    mallnew: /order/mallnew/
-    getVipCod: /rights/getvipcoupons
+
+

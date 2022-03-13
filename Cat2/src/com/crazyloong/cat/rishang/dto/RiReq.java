@@ -2,6 +2,8 @@ package com.crazyloong.cat.rishang.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author YPLI
  * @description
@@ -10,6 +12,6 @@ import lombok.Data;
 @Data
 public class RiReq {
     String token;
-    String phone;
+    List<String> phoneList;
     String password;
 }

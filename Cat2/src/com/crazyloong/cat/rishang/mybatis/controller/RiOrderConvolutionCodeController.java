@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.crazyloong.cat.rishang.dto.ConvolutionReq;
 import com.crazyloong.cat.rishang.mybatis.entity.RiOrderConvolutionCode;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderConvolutionCodeService;
+import com.mysql.jdbc.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -79,9 +80,12 @@ public class RiOrderConvolutionCodeController extends ApiController {
         List<String> codeList = Arrays.asList(convolutionReq.getCodeString().split("\n"));
 
         for(String code: codeList){
-            RiOrderConvolutionCode riOrderConvolutionCode = new RiOrderConvolutionCode();
-            riOrderConvolutionCode.setCode(code);
-            this.riOrderConvolutionCodeService.save(riOrderConvolutionCode);
+            if (!StringUtils.isNullOrEmpty(code)) {
+                RiOrderConvolutionCode riOrderConvolutionCode = new RiOrderConvolutionCode();
+                riOrderConvolutionCode.setCode(code.trim());
+                this.riOrderConvolutionCodeService.save(riOrderConvolutionCode);
+            }
+
         }
         return success("操作成功");
     }
