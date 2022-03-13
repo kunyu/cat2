@@ -6,7 +6,6 @@ import com.crazyloong.cat.rishang.mybatis.dao.RiOrderConvolutionCodeDao;
 import com.crazyloong.cat.rishang.mybatis.entity.RiOrderConvolutionCode;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderConvolutionCodeService;
 import com.mysql.jdbc.StringUtils;
-import org.jsoup.helper.StringUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

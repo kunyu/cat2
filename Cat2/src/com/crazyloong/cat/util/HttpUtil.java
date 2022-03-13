@@ -3,7 +3,6 @@ package com.crazyloong.cat.util;
 import com.alibaba.fastjson.JSONObject;
 import com.crazyloong.cat.pojo.GetBody;
 import com.crazyloong.cat.pojo.PostBody;
-import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -33,6 +32,7 @@ public class HttpUtil {
         //执行
         HttpUriRequest httpGet = new HttpGet(urlBuilder.toString());
         httpGet.addHeader("Authorization",getBody.getAuthorization());
+        httpGet.addHeader("token",getBody.getAuthorization());
         CloseableHttpResponse response = null;
         try {
             response = HttpConnectionPoolUtil.getHttpClient(urlBuilder.toString()).execute(httpGet);
@@ -69,6 +69,7 @@ public class HttpUtil {
         httpPost.addHeader("User-Agent", "Mozilla/5.0 (Linux; Android 7.1.2; SM-N976N Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/75.0.3770.143 Mobile Safari/537.36 Html5Plus/1.0");
         httpPost.addHeader("Content-Type", "application/json");
         httpPost.addHeader("Authorization",postBody.getAuthorization());
+        httpPost.addHeader("token",postBody.getAuthorization());
         CloseableHttpResponse response = null;
         try {
             response = HttpConnectionPoolUtil.getHttpClient(urlBuilder.toString()).execute(httpPost);

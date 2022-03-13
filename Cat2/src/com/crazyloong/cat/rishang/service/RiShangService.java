@@ -1,10 +1,8 @@
 package com.crazyloong.cat.rishang.service;
 
 import com.crazyloong.cat.rishang.dto.*;
-import com.crazyloong.cat.pojo.PostBody;
 
 import java.util.List;
-import java.util.Map;
 
 
 public interface RiShangService {

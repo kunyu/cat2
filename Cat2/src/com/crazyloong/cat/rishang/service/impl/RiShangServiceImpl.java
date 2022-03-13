@@ -2,7 +2,6 @@ package com.crazyloong.cat.rishang.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
-import com.crazyloong.cat.api.R;
 import com.crazyloong.cat.rishang.constant.PlaceOrderType;
 import com.crazyloong.cat.rishang.constant.RiShangURL;
 import com.crazyloong.cat.rishang.dto.*;
@@ -11,7 +10,6 @@ import com.crazyloong.cat.pojo.GetBody;
 import com.crazyloong.cat.pojo.PostBody;
 import com.crazyloong.cat.rishang.mybatis.entity.RiOrderAddress;
 import com.crazyloong.cat.rishang.mybatis.entity.RiOrderConvolutionCode;
-import com.crazyloong.cat.rishang.mybatis.entity.RiOrderPhone;
 import com.crazyloong.cat.rishang.mybatis.entity.RiOrderPlaced;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderAddressService;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderConvolutionCodeService;
@@ -22,10 +20,8 @@ import org.apache.http.HttpEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.*;
 
@@ -42,6 +38,8 @@ public class RiShangServiceImpl implements RiShangService {
     private RiOrderAddressService addressService;
     @Autowired
     private RiOrderPlacedService riOrderPlacedService;
+    @Autowired
+    private HttpUtil httpUtil;
 
 
     /**
@@ -51,7 +49,6 @@ public class RiShangServiceImpl implements RiShangService {
      */
     @Override
     public boolean addCart(int abiId,int num,String pwd) {
-        HttpUtil httpUtil = new HttpUtil();
         PostBody<Map<String,Object>> postBody = new PostBody();
         postBody.setAuthorization(pwd);
         postBody.setAPI(RiShangURL.RISHANG_ADDCART.code);
@@ -81,7 +78,6 @@ public class RiShangServiceImpl implements RiShangService {
      **/
     @Override
     public CreateOrderRsp createOrder(String token,CreateOrderReq req) {
-        HttpUtil httpUtil = new HttpUtil();
         PostBody<CreateOrderReq> postBody = new PostBody<>();
         postBody.setAuthorization(token);
         postBody.setAPI(RiShangURL.RISHANG_CREATE_ORDER.code);
@@ -110,7 +106,6 @@ public class RiShangServiceImpl implements RiShangService {
      **/
     @Override
     public VipCodeRsp getVipCode(String token,String code){
-        HttpUtil httpUtil = new HttpUtil();
         GetBody getBody = new GetBody();
         getBody.setAuthorization(token);
         getBody.setAPI(RiShangURL.RISHANG_GETVIPCOUPONV2.code);
@@ -136,7 +131,6 @@ public class RiShangServiceImpl implements RiShangService {
      * @return
      */
     public VipCodeRsp getVipCodeMyself(String token,String preferentialSum){
-        HttpUtil httpUtil = new HttpUtil();
         GetBody getBody = new GetBody();
         getBody.setAuthorization(token);
         getBody.setAPI(RiShangURL.RISHANG_GETVIPCOD.code);
@@ -170,7 +164,6 @@ public class RiShangServiceImpl implements RiShangService {
      **/
     @Override
     public PlacedOrderRsp getPlacedOrder(String token,String wishid){
-        HttpUtil httpUtil = new HttpUtil();
         GetBody getBody = new GetBody();
         getBody.setAuthorization(token);
         getBody.setAPI(RiShangURL.RISHANG_MALLNEW.code+wishid);
@@ -202,7 +195,6 @@ public class RiShangServiceImpl implements RiShangService {
      **/
     @Override
     public Integer submitOrder(String token, SubmitOrderReq req) {
-        HttpUtil httpUtil = new HttpUtil();
         PostBody<SubmitOrderReq> postBody = new PostBody();
         postBody.setAuthorization(token);
         postBody.setAPI(RiShangURL.RISHANG_SUBMITORDER.code);
@@ -231,7 +223,6 @@ public class RiShangServiceImpl implements RiShangService {
      **/
     @Override
     public RiReturnRsp<List<Object>> getWishs(String token, Integer state) {
-        HttpUtil httpUtil = new HttpUtil();
         GetBody getBody = new GetBody();
         getBody.setAuthorization(token);
         getBody.setAPI(RiShangURL.RISHANG_WISHS.code);
@@ -263,7 +254,6 @@ public class RiShangServiceImpl implements RiShangService {
      **/
     @Override
     public String login(String user,String pwd){
-        HttpUtil httpUtil = new HttpUtil();
         PostBody postBody = new PostBody();
         postBody.setAuthorization(pwd);
         postBody.setAPI(RiShangURL.RISHANG_loginv3.code);
