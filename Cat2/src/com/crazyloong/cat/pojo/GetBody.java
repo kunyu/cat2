@@ -19,4 +19,6 @@ public class GetBody {
 
     private Map<String, Object> paramters;
 
+    private String stockId;
+
 }

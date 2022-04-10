@@ -15,6 +15,7 @@ import com.crazyloong.cat.rishang.mybatis.service.RiOrderAddressService;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderConvolutionCodeService;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderPlacedService;
 import com.crazyloong.cat.rishang.service.RiShangService;
+import com.crazyloong.cat.rshainan.constant.RishangHNEnum;
 import com.crazyloong.cat.util.HttpUtil;
 import org.apache.http.HttpEntity;
 import org.slf4j.Logger;
@@ -58,7 +59,7 @@ public class RiShangServiceImpl implements RiShangService {
         paramters.put("num",num);
         postBody.setParamters(paramters);
         try {
-            String entity = httpUtil.doPost(postBody);
+            String entity = httpUtil.doPost(postBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entity != null) {
                 return true;
             }
@@ -84,7 +85,7 @@ public class RiShangServiceImpl implements RiShangService {
         postBody.setHost(RISHANG_HOST);
         postBody.setParamters(req);
         try {
-            String entityStr = httpUtil.doPost(postBody);
+            String entityStr = httpUtil.doPost(postBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
                 RiReturnRsp<CreateOrderRsp> createOrderRsp = JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<CreateOrderRsp>>(){});
                 CheckFail(createOrderRsp);
@@ -114,7 +115,7 @@ public class RiShangServiceImpl implements RiShangService {
         paramters.put("code",code);
         getBody.setParamters(paramters);
         try {
-            String entityStr = httpUtil.doGet(getBody);
+            String entityStr = httpUtil.doGet(getBody, RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
                 RiReturnRsp<VipCodeRsp> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<VipCodeRsp>>(){});
                 return vipcode.getData();
@@ -136,7 +137,7 @@ public class RiShangServiceImpl implements RiShangService {
         getBody.setAPI(RiShangURL.RISHANG_GETVIPCOD.code);
         getBody.setHost(RISHANG_HOST);
         try {
-            String entityStr = httpUtil.doGet(getBody);
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
                 RiReturnRsp<List<VipCodeRsp>> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<List<VipCodeRsp>>>(){});
                 List<VipCodeRsp> vipCodeRspList = vipcode.getData();
@@ -169,7 +170,7 @@ public class RiShangServiceImpl implements RiShangService {
         getBody.setAPI(RiShangURL.RISHANG_MALLNEW.code+wishid);
         getBody.setHost(RISHANG_HOST);
         try {
-            String entityStr = httpUtil.doGet(getBody);
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
                 RiReturnRsp<PlacedOrderRsp> placedOrderReturn =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<PlacedOrderRsp>>(){});
                 return placedOrderReturn.getData();
@@ -201,7 +202,7 @@ public class RiShangServiceImpl implements RiShangService {
         postBody.setHost(RISHANG_HOST);
         postBody.setParamters(req);
         try {
-            String entityStr = httpUtil.doPost(postBody);
+            String entityStr = httpUtil.doPost(postBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
                 RiReturnRsp<Integer> submiReturn = JSONObject.parseObject(entityStr,RiReturnRsp.class);
                 CheckFail(submiReturn);
@@ -232,7 +233,7 @@ public class RiShangServiceImpl implements RiShangService {
         getBody.setParamters(paramters);
         HttpEntity entity;
         try {
-            String entityStr = httpUtil.doGet(getBody);
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
                 RiReturnRsp<List<Object>> wishRsp = JSONObject.parseObject(entityStr,RiReturnRsp.class);
                 CheckFail(wishRsp);
@@ -270,7 +271,7 @@ public class RiShangServiceImpl implements RiShangService {
         HttpEntity entity;
         String tokenStr = "";
         try {
-            String entityStr = httpUtil.doPost(postBody);
+            String entityStr = httpUtil.doPost(postBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
                 JSONObject jb = JSONObject.parseObject(entityStr);
                 JSONObject token = (JSONObject)((JSONObject)jb.get("data")).get("token");

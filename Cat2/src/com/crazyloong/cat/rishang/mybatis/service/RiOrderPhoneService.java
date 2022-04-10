@@ -11,5 +11,14 @@ import com.crazyloong.cat.rishang.mybatis.entity.RiOrderPhone;
  */
 public interface RiOrderPhoneService extends IService<RiOrderPhone> {
 
+    /**
+    * 功能描述：根据手机号获取手机对象
+    * @Param:
+    * @Return: com.crazyloong.cat.rishang.mybatis.entity.RiOrderPhone
+    * @Author:
+    * @Date: 2022/3/19 18:47
+    * @Description:
+    */
+    RiOrderPhone getByPhone(String phone);
 }
 

@@ -16,7 +16,7 @@
         <value-type>java.util.Map</value-type>
         <expiry>
             <!-- 缓存 ttl，单位为分钟，现在设置的是1个小时 -->
-            <ttl unit="minutes">60</ttl>
+            <ttl unit="minutes">1000</ttl>
         </expiry>
         <resources>
             <!-- 分配资源大小 -->

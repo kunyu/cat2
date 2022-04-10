@@ -4,19 +4,25 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.crazyloong.cat.execption.RiBizExecption;
 import com.crazyloong.cat.pojo.GetBody;
+import com.crazyloong.cat.pojo.PostBody;
+import com.crazyloong.cat.rishang.constant.RiShangURL;
+import com.crazyloong.cat.rshainan.constant.RishangHNEnum;
 import com.crazyloong.cat.rshainan.constant.RishangHNURL;
 import com.crazyloong.cat.rshainan.dto.*;
 import com.crazyloong.cat.rshainan.service.RSHaiNanService;
+import com.crazyloong.cat.util.CacheUtil;
 import com.crazyloong.cat.util.HttpUtil;
+import com.crazyloong.cat.util.LiuMingHttpsUtils;
+import com.crazyloong.cat.util.UrlBuilder;
 import com.mysql.jdbc.StringUtils;
+import org.apache.http.client.methods.HttpPost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @Author : crazyloongcat
@@ -29,6 +35,8 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
 
     @Autowired
     private HttpUtil httpUtil;
+    @Autowired
+    private LiuMingHttpsUtils liuMingHttpsUtils;
 
     private static String RISHANG_HOST = "service.hndutyfree.com.cn";
 
@@ -49,13 +57,26 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
         Map<String, Object> paramters = new HashMap<>();
         paramters.put("phone",hnReq.getPhone());
         paramters.put("password",hnReq.getPassword());
-        paramters.put("stockId","6868");
+        paramters.put("stockId","6922");
         getBody.setParamters(paramters);
         try {
-            String entityStr = httpUtil.doGet(getBody);
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.HN_ONCE_LOGIN);
             if (entityStr != null) {
-                HNRsp<LoginRsp> loginRspHNRsp =  JSONObject.parseObject(entityStr,new TypeReference<HNRsp<LoginRsp>>(){});
-                return loginRspHNRsp.getData().getToken();
+                // 第一次登录获取token
+                HNRsp<LoginRsp> loginRspHNRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                if (loginRspHNRsp.getData() != null) {
+                    getBody.setAuthorization(loginRspHNRsp.getData().getToken());
+                    // 进行第二次登录
+                    String entityStrTwice = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+                    HNRsp<LoginRsp> loginRspHNRspTwice =  JSONObject.parseObject(entityStrTwice,new TypeReference<>(){});
+                    if (loginRspHNRspTwice.getData() != null) {
+                        return loginRspHNRspTwice.getData().getToken();
+                    } else {
+                        throw new RiBizExecption("日上海南登录 失败："+loginRspHNRspTwice.getMessage());
+                    }
+                } else {
+                    throw new RiBizExecption("日上海南登录 失败："+loginRspHNRsp.getMessage());
+                }
             }
         } catch (Exception e){
             logger.error("日上海南登录 失败",e);
@@ -76,20 +97,26 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
     @Override
     public HNRsp<GoodsListRsp> findGoodsList(HNReq hnReq) {
         GetBody getBody = new GetBody();
+        getBody.setAuthorization(hnReq.getToken());
         getBody.setAPI(RishangHNURL.RSHN_FINDGOODSLIST.code);
         getBody.setHost(RISHANG_HOST);
         getBody.setAuthorization(hnReq.getToken());
         Map<String, Object> paramters = new HashMap<>();
-        paramters.put("categoryId",hnReq.getCategoryId());
+        if (hnReq.getCategoryId() != null) {
+            paramters.put("categoryId",hnReq.getCategoryId());
+        }
+        if (!StringUtils.isNullOrEmpty(hnReq.getKeyword())) {
+            paramters.put("keyword",hnReq.getKeyword());
+        }
         paramters.put("pageSize",hnReq.getPageSize());
-        if(StringUtils.isNullOrEmpty(hnReq.getGoodsId())) {
+        if(!StringUtils.isNullOrEmpty(hnReq.getGoodsId())) {
             paramters.put("goodsId",hnReq.getGoodsId());
         }
         getBody.setParamters(paramters);
         try {
-            String entityStr = httpUtil.doGet(getBody);
+            String entityStr = httpUtil.doGet(getBody, RishangHNEnum.GetType.TOKEN);
             if (entityStr != null) {
-                HNRsp<GoodsListRsp> goodsListRspHNRsp =  JSONObject.parseObject(entityStr,new TypeReference<HNRsp<GoodsListRsp>>(){});
+                HNRsp<GoodsListRsp> goodsListRspHNRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
                 return goodsListRspHNRsp;
             }
         } catch (Exception e){
@@ -111,25 +138,31 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
     @Override
     public HNRsp<GoodsListSearchRsp> findGoodsListSearch(HNReq hnReq) {
         GetBody getBody = new GetBody();
+        getBody.setAuthorization(hnReq.getToken());
         getBody.setAPI(RishangHNURL.RSHN_FINDGOODSLISTSEARCH.code);
         getBody.setHost(RISHANG_HOST);
         getBody.setAuthorization(hnReq.getToken());
         Map<String, Object> paramters = new HashMap<>();
-        paramters.put("categoryId",hnReq.getCategoryId());
+        if (hnReq.getCategoryId() != null) {
+            paramters.put("categoryId",hnReq.getCategoryId());
+        }
+        if (!StringUtils.isNullOrEmpty(hnReq.getKeyword())) {
+            paramters.put("keyword",hnReq.getKeyword());
+        }
         paramters.put("pageSize",hnReq.getPageSize());
-        if(StringUtils.isNullOrEmpty(hnReq.getGoodsId())) {
+        if(!StringUtils.isNullOrEmpty(hnReq.getGoodsId())) {
             paramters.put("goodsId",hnReq.getGoodsId());
         }
         getBody.setParamters(paramters);
         try {
-            String entityStr = httpUtil.doGet(getBody);
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
             if (entityStr != null) {
-                HNRsp<GoodsListSearchRsp> goodsListSearchRsp =  JSONObject.parseObject(entityStr,new TypeReference<HNRsp<GoodsListSearchRsp>>(){});
+                HNRsp<GoodsListSearchRsp> goodsListSearchRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
                 return goodsListSearchRsp;
             }
         } catch (Exception e){
-            logger.error("日上海南获取商品列表 失败",e);
-            throw new RiBizExecption("日上海南获取商品列表 失败",e);
+            logger.error("日上海南获取分类列表 失败",e);
+            throw new RiBizExecption("日上海南获取分类列表 失败",e);
         }
         return null;
     }
@@ -143,20 +176,231 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
      * @Description:
      */
     @Override
-    public HNRsp<List<CategoryRsp>> findCategoryList() {
+    public HNRsp<List<CategoryRsp>> findCategoryList(HNReq hnReq) {
         GetBody getBody = new GetBody();
+        getBody.setAuthorization(hnReq.getToken());
         getBody.setAPI(RishangHNURL.RSHN_FINDCATEGORYLIST.code);
         getBody.setHost(RISHANG_HOST);
         try {
-            String entityStr = httpUtil.doGet(getBody);
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
             if (entityStr != null) {
-                HNRsp<List<CategoryRsp>> categoryListRsp =  JSONObject.parseObject(entityStr,new TypeReference<HNRsp<List<CategoryRsp>>>(){});
+                HNRsp<List<CategoryRsp>> categoryListRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
                 return categoryListRsp;
             }
         } catch (Exception e){
-            logger.error("日上海南获取商品列表 失败",e);
-            throw new RiBizExecption("日上海南获取商品列表 失败",e);
+            logger.error("日上海南获取所有商品分类 失败",e);
+            throw new RiBizExecption("日上海南获取所有商品分类 失败",e);
         }
         return null;
+    }
+
+    /**
+     * 功能描述：根据商品ID获取商品详情
+     * @Param:
+     * @param hnReq
+     * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.GoodsDetailRsp>
+     * @Author:
+     * @Date: 2022/3/13 23:31
+     * @Description:
+     */
+    @Override
+    public HNRsp<GoodsDetailRsp> findGoodsDetailByIdAlways(HNReq hnReq) {
+        GetBody getBody = new GetBody();
+        getBody.setAPI(RishangHNURL.RSHN_FINDGOODSDETAILBYIDALWAYS.code);
+        getBody.setHost(RISHANG_HOST);
+        getBody.setAuthorization(hnReq.getToken());
+        Map<String, Object> paramters = new HashMap<>();
+        paramters.put("goodsId",hnReq.getGoodsId());
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr != null) {
+                HNRsp<GoodsDetailRsp> GoodsDetailRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                return GoodsDetailRsp;
+            }
+        } catch (Exception e){
+            logger.error("日上海南根据商品ID获取商品详情 失败",e);
+            throw new RiBizExecption("日上海南根据商品ID获取商品详情 失败",e);
+        }
+        return null;
+    }
+
+    /**
+     * 功能描述：获取首页相关信息
+     * @Param:
+     * @param hnReq
+     * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.SubjectListRsp>
+     * @Author:
+     * @Date: 2022/3/13 23:50
+     * @Description:
+     */
+    @Override
+    public HNRsp<SubjectListRsp> findSubjectList(HNReq hnReq){
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(hnReq.getToken());
+        getBody.setAPI(RishangHNURL.RSHN_FINDSUBJECTLIST.code);
+        getBody.setHost(RISHANG_HOST);
+        Map<String, Object> paramters = new HashMap<>();
+        paramters.put("pageSize",hnReq.getPageSize());
+        paramters.put("pageNum",hnReq.getPageNum());
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr != null) {
+
+                HNRsp<SubjectListRsp> subjectListRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                return subjectListRsp;
+            }
+        } catch (Exception e){
+            logger.error("日上海南获取首页相关信息 失败",e);
+            throw new RiBizExecption("日上海南获取首页相关信息 失败",e);
+        }
+        return null;
+    }
+
+    /**
+    * 功能描述：下单
+    * @Param:
+     * @param placeOrderReq
+    * @Return: java.lang.Boolean
+    * @Author:
+    * @Date: 2022/3/19 18:10
+    * @Description:
+    */
+    @Override
+    public Boolean placeOrder(PlaceOrderReq placeOrderReq) {
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(placeOrderReq.getToken());
+        getBody.setAPI(RishangHNURL.RSHN_PREPAREORDER.code);
+        getBody.setHost(RISHANG_HOST);
+        Map<String, Object> paramters = new HashMap<>();
+        paramters.put("count",placeOrderReq.getCount());
+        paramters.put("goodsId",placeOrderReq.getGoodsId());
+        paramters.put("point",placeOrderReq.getPoint());
+        paramters.put("couponAmount",placeOrderReq.getCouponAmount());
+        paramters.put("pointRemain",placeOrderReq.getPointRemain());
+        getBody.setParamters(paramters);
+        HNRsp<PrepareOrderRsp> prepareOrderRsp = null;
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr != null) {
+                prepareOrderRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+            }
+        } catch (Exception e){
+            logger.error("日上海南获取首页相关信息 失败",e);
+            throw new RiBizExecption("日上海南下单前准备 失败",e);
+        }
+        getBody.setAPI(RishangHNURL.RSHN_GETMEMBERPOINTCLOSED.code);
+        paramters = new HashMap<>();
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr == null) {
+                throw new RiBizExecption("日上海南下单前准备 失败");
+            }
+        } catch (Exception e){
+            logger.error("日上海南获取首页相关信息 失败",e);
+            throw new RiBizExecption("日上海南下单前准备 失败",e);
+        }
+
+        getBody.setAPI(RishangHNURL.RSHN_ORDERMEMBERCOUPON.code);
+        paramters = new HashMap<>();
+        paramters.put("count",placeOrderReq.getCount());
+        paramters.put("goodsId",placeOrderReq.getGoodsId());
+        paramters.put("mainOrderId",prepareOrderRsp.getData().getMainOrderId());
+        paramters.put("memberCoupons",placeOrderReq.getMemberCoupons());
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr == null) {
+                throw new RiBizExecption("日上海南下单前准备 失败");
+            }
+        } catch (Exception e){
+            logger.error("日上海南获取首页相关信息 失败",e);
+            throw new RiBizExecption("日上海南下单前准备 失败",e);
+        }
+
+        GetBody getBody1 = new GetBody();
+        getBody1.setAuthorization(placeOrderReq.getToken());
+        getBody1.setAPI(RishangHNURL.RSHN_CONFIRMORDER.code);
+        getBody1.setHost(RISHANG_HOST);
+        paramters = new LinkedHashMap<>();
+        paramters.put("prov",prepareOrderRsp.getData().getMemberAddress().getProvince());
+        paramters.put("city",prepareOrderRsp.getData().getMemberAddress().getCity());
+        paramters.put("area",prepareOrderRsp.getData().getMemberAddress().getDistrict());
+        paramters.put("receiveAddress",prepareOrderRsp.getData().getMemberAddress().getAddress());
+        paramters.put("receiveName",prepareOrderRsp.getData().getMemberAddress().getName());
+        paramters.put("receivePhone",prepareOrderRsp.getData().getMemberAddress().getMobile());
+        if (prepareOrderRsp.getData().getNeedCheck()) {
+            paramters.put("certName",prepareOrderRsp.getData().getMemberCheck().getCertName());
+            paramters.put("certNo",prepareOrderRsp.getData().getMemberCheck().getCertNumber());
+            paramters.put("flightNo",prepareOrderRsp.getData().getMemberCheck().getTrafficNumber());
+            paramters.put("flightDate",prepareOrderRsp.getData().getMemberCheck().getLeaveDate());
+            paramters.put("levelType",prepareOrderRsp.getData().getMemberCheck().getTrafficName());
+        }
+        paramters.put("stockId",placeOrderReq.getStockId());
+        paramters.put("point",placeOrderReq.getPoint());
+        paramters.put("mainOrderId",prepareOrderRsp.getData().getMainOrderId());
+        paramters.put("goodsId",placeOrderReq.getGoodsId());
+        paramters.put("count",placeOrderReq.getCount());
+        paramters.put("memberCoupons",placeOrderReq.getMemberCoupons());
+        paramters.put("mac",prepareOrderRsp.getData().getMac());
+        getBody1.setParamters(paramters);
+        UrlBuilder urlBuilder = new UrlBuilder(getBody1);
+        String urlstr = urlBuilder.toString();
+        try {
+            String entity = liuMingHttpsUtils.httpRequest(urlstr, placeOrderReq.getToken());
+            if (entity != null) {
+                HNRsp<Boolean> booleanrsp = JSONObject.parseObject(entity,new TypeReference<>(){});
+                if (booleanrsp.getData()) {
+                    return true;
+                } else {
+                    throw new RiBizExecption(booleanrsp.getMessage());
+                }
+            }
+        } catch (Exception e){
+            logger.error("生成订单处理异常:",e);
+            throw new RiBizExecption("生成订单处理异常 失败",e);
+        }
+
+        return null;
+    }
+
+    /**
+    * 功能描述： 校验token 是否过期
+    * @Param:
+    * @Return: java.lang.Boolean
+    * @Author:
+    * @Date: 2022/3/21 20:33
+    * @Description:
+    */
+    @Override
+    public Boolean checkToken(String token){
+        HNReq hnReq = new HNReq();
+        hnReq.setToken(token);
+        hnReq.setKeyword("科颜氏");
+        hnReq.setPageSize("10");
+        HNRsp<GoodsListRsp> goodsListRsp = this.findGoodsList(hnReq);
+        return checkError(goodsListRsp);
+    }
+
+    /**
+    * 功能描述： 海南日上校验错误信息
+    * @Param:
+     * @param hnRsp
+    * @Return: java.lang.Boolean
+    * @Author:
+    * @Date: 2022/3/19 16:29
+    * @Description:
+    */
+    @Override
+    public Boolean checkError(HNRsp<?> hnRsp){
+        if (1024 == hnRsp.getCode()) {
+            return false;
+        }
+        if (0 != hnRsp.getCode()) {
+            throw new RiBizExecption(hnRsp.getMessage());
+        }
+        return true;
     }
 }

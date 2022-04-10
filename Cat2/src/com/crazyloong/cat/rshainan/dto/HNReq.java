@@ -16,11 +16,14 @@ public class HNReq {
     /*  token   */
     private String token;
     /*  分类 */
-    private String categoryId;
+    private Integer categoryId;
     /*  查询数量  */
     private String pageSize;
+    /*  查询第几页  */
+    private String pageNum;
     /*  品牌ID  */
     private String brandId;
     /*  最后一件商品ID  */
     private String goodsId;
+    private String keyword;
 }

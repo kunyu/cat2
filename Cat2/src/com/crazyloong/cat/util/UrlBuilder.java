@@ -56,7 +56,7 @@ public class UrlBuilder {
      * 构造器
      */
     public UrlBuilder(String serverName, int serverPort, String[] paths) {
-        this("http", serverName, serverPort, paths);
+        this("https", serverName, serverPort, paths);
     }
 
     /**
@@ -182,7 +182,7 @@ public class UrlBuilder {
         s.append(serverName);	// 写入服务器名
         s.append(serverPort == 80 ? "" : ":" + serverPort);		// 写入端口号
         if (isPathExsit()) {
-            s.append("/" + getPath());	// 写入路径
+            s.append(getPath());	// 写入路径
         }
 
         // 写入参数字符串

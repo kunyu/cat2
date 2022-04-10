@@ -29,4 +29,5 @@ public class PostBody<T> {
     // 购买商品
     private Map<String, Integer> goods;
 
+    private String stockId;
 }

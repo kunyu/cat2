@@ -89,7 +89,7 @@ public class HttpConnectionPoolUtil {
                             manager.closeExpiredConnections();
                             //关闭5s空闲的连接
                             manager.closeIdleConnections(IDLE_TIME, TimeUnit.SECONDS);
-                            logger.info("close expired and idle for over "+IDLE_TIME+"s connection");
+                            logger.debug("close expired and idle for over "+IDLE_TIME+"s connection");
                         }
                     }, IDLE_TIME, IDLE_TIME, TimeUnit.SECONDS);
                 }

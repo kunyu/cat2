@@ -8,11 +8,11 @@ import com.crazyloong.cat.rishang.mybatis.entity.RiOrderConvolutionCode;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderConvolutionCodeService;
 import com.crazyloong.cat.pojo.RSUserList;
 import com.crazyloong.cat.rishang.service.RiShangService;
+import com.crazyloong.cat.util.CacheUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.bind.annotation.*;
@@ -33,13 +33,10 @@ public class RiShangController extends ApiController {
     @Autowired
     RSUserList userList;
     @Autowired
-    @Qualifier(value = "taskExecutor")
-    private ThreadPoolTaskExecutor poolTaskExecutor;
-    @Autowired
     private RiOrderConvolutionCodeService riOrderConvolutionCodeService;
 
     @Resource
-    private CacheManager cacheManager;
+    private CacheUtil cacheUtil;
 
 
 
@@ -47,11 +44,10 @@ public class RiShangController extends ApiController {
     public R<String> riLogin(@RequestBody RiReq riReq){
         List<String> phoneList = riReq.getPhoneList();
         Map<String,String> phoneToken = new HashMap<>();
-        cacheManager.getCache("user_cache").clear();
         phoneList.forEach(phone->{
             phoneToken.put(phone,"Bearer "+riShangService.login(phone,riReq.getPassword()));
         });
-        cacheManager.getCache("user_cache").put("phoneToken",phoneToken);
+        cacheUtil.put("phoneToken",phoneToken);
         // 返回第一笔数据的登录token
         return success(phoneToken.get(phoneList.get(0)));
     }
@@ -113,18 +109,19 @@ public class RiShangController extends ApiController {
 
     @PostMapping("/placeOrderByCode")
     public R<String> placeOrderByCode(@RequestBody RiOrderReq riOrderReq){
-        Map<String,String> phoneToken = cacheManager.getCache("user_cache").get("phoneToken",Map.class);
+        Map<String,String> phoneToken = cacheUtil.get("phoneToken",Map.class);
+        if (phoneToken == null) {
+            return failed("无可用账号，请返回重新选择用户登录");
+        }
         phoneToken.forEach((phone,token)->{
             riOrderReq.setPhone(phone);
             riOrderReq.setToken(token);
             // 异步调用线程下单
-            poolTaskExecutor.execute(()->{
-                try {
-                    riShangService.placeOrderByCode(riOrderReq);
-                } catch (InterruptedException e) {
-                    logger.error("线程终止：",e);
-                }
-            });
+            try {
+                riShangService.placeOrderByCode(riOrderReq);
+            } catch (InterruptedException e) {
+                logger.error("线程终止：",e);
+            }
         });
         return success("下单调用成功，可稍后登录app查看！");
     }
