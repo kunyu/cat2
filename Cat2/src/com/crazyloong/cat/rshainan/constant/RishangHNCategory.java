@@ -11,10 +11,10 @@ public enum RishangHNCategory {
     COLOURS(66,"香水"),;
 
     public Integer code;
-    public String name;
+    public String desc;
 
-    RishangHNCategory(Integer code,String name) {
+    RishangHNCategory(Integer code,String desc) {
         this.code = code;
-        this.name = name;
+        this.desc = desc;
     }
 }

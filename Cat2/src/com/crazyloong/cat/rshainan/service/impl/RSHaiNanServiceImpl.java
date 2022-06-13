@@ -4,8 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.crazyloong.cat.execption.RiBizExecption;
 import com.crazyloong.cat.pojo.GetBody;
-import com.crazyloong.cat.pojo.PostBody;
-import com.crazyloong.cat.rishang.constant.RiShangURL;
+import com.crazyloong.cat.rshainan.constant.RewardOrderType;
 import com.crazyloong.cat.rshainan.constant.RishangHNEnum;
 import com.crazyloong.cat.rshainan.constant.RishangHNURL;
 import com.crazyloong.cat.rshainan.dto.*;
@@ -15,10 +14,8 @@ import com.crazyloong.cat.util.HttpUtil;
 import com.crazyloong.cat.util.LiuMingHttpsUtils;
 import com.crazyloong.cat.util.UrlBuilder;
 import com.mysql.jdbc.StringUtils;
-import org.apache.http.client.methods.HttpPost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -36,9 +33,12 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
     @Autowired
     private HttpUtil httpUtil;
     @Autowired
+    private CacheUtil cacheUtil;
+    @Autowired
     private LiuMingHttpsUtils liuMingHttpsUtils;
 
     private static String RISHANG_HOST = "service.hndutyfree.com.cn";
+    private static String RISHANG_HOST1 = "service.cdfhnms.com";
 
     /**
      * 功能描述： 日上海南登录
@@ -254,6 +254,172 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
         } catch (Exception e){
             logger.error("日上海南获取首页相关信息 失败",e);
             throw new RiBizExecption("日上海南获取首页相关信息 失败",e);
+        }
+        return null;
+    }
+
+    /**
+    * 功能描述：获取订单相关信息
+    * @Param:
+     * @param hnReq
+    * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.OrderListRsp>
+    * @Author:
+    * @Date: 2022/5/19 20:39
+    * @Description:
+    */
+    @Override
+    public HNRsp<OrderListRsp> findOrderList(HNReq hnReq) {
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(cacheUtil.getHNToken(hnReq.getPhone()));
+        getBody.setAPI(RishangHNURL.RSHN_FINDORDERLIST.code);
+        getBody.setHost(RISHANG_HOST);
+        Map<String, Object> paramters = new HashMap<>();
+        paramters.put("pageSize",hnReq.getPageSize());
+        paramters.put("pageNum",hnReq.getPageNum());
+        paramters.put("type",hnReq.getType());
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr != null) {
+
+                HNRsp<OrderListRsp> orderListRspHNRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                return orderListRspHNRsp;
+            }
+        } catch (Exception e){
+            logger.error("日上海南获取订单信息 失败",e);
+            throw new RiBizExecption("日上海南获取订单信息 失败",e);
+        }
+        return null;
+    }
+
+    /**
+     * 功能描述：获取员工返利相关信息
+     * @Param:
+     * @param hnReq
+     * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.SubjectListRsp>
+     * @Author:
+     * @Date: 2022/3/13 23:50
+     * @Description:
+     */
+    @Override
+    public HNRsp<RewardDay> getRewardDay(HNReq hnReq){
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(cacheUtil.getHNToken(hnReq.getPhone()));
+        getBody.setAPI(RishangHNURL.RSHN_GETREWARDDAY.code);
+        getBody.setHost(RISHANG_HOST);
+        Map<String, Object> paramters = new HashMap<>();
+        paramters.put("pageSize",hnReq.getPageSize());
+        paramters.put("pageNum",hnReq.getPageNum());
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr != null) {
+
+                HNRsp<RewardDay> rewardDayHNRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                return rewardDayHNRsp;
+            }
+        } catch (Exception e){
+            logger.error("日上海南获取订单信息 失败",e);
+            throw new RiBizExecption("日上海南获取订单信息 失败",e);
+        }
+        return null;
+    }
+
+    /**
+     * 功能描述：获取员工返利明细相关信息
+     * @Param:
+     * @param hnReq
+     * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.SubjectListRsp>
+     * @Author:
+     * @Date: 2022/3/13 23:50
+     * @Description:
+     */
+    @Override
+    public HNRsp<RewardOrder> getRewardOrder(HNReq hnReq){
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(cacheUtil.getHNToken(hnReq.getPhone()));
+        getBody.setAPI(RishangHNURL.RSHN_GETREWARDORDER.code);
+        getBody.setHost(RISHANG_HOST1);
+        Map<String, Object> paramters = new HashMap<>();
+        paramters.put("pageSize","100");
+        paramters.put("pageNum","1");
+        paramters.put("id",hnReq.getMainOrderId());
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr != null) {
+
+                HNRsp<RewardOrder> rewardOrderHNRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                int pageSizeAll = rewardOrderHNRsp.getData().getTotal()%100 == 0 ? rewardOrderHNRsp.getData().getTotal()/100 :rewardOrderHNRsp.getData().getTotal()/100+1;
+                for (int i = 2; i <= pageSizeAll; i++) {
+                    getRewardOrderByPage(hnReq,i,rewardOrderHNRsp);
+                }
+                // 数据处理
+                rewardOrderHNRsp.getData().setId(hnReq.getMainOrderId());
+                // 码值转换
+                for (RewardOrder.ListDTO dto: rewardOrderHNRsp.getData().getList()) {
+                    dto.setTypeName(RewardOrderType.getDescByCode(String.valueOf(dto.getType())));
+                }
+                return rewardOrderHNRsp;
+            }
+        } catch (Exception e){
+            logger.error("日上海南获取订单信息 失败",e);
+            throw new RiBizExecption("日上海南获取订单信息 失败",e);
+        }
+        return null;
+    }
+    private void getRewardOrderByPage(HNReq hnReq,int pageNum,HNRsp<RewardOrder> rewardOrderHNRsp){
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(cacheUtil.getHNToken(hnReq.getPhone()));
+        getBody.setAPI(RishangHNURL.RSHN_GETREWARDORDER.code);
+        getBody.setHost(RISHANG_HOST1);
+        Map<String, Object> paramters = new HashMap<>();
+        paramters.put("pageSize","100");
+        paramters.put("pageNum",pageNum);
+        paramters.put("id",hnReq.getMainOrderId());
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr != null) {
+                HNRsp<RewardOrder> rewardOrderHNRsp1 =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                rewardOrderHNRsp.getData().getList().addAll(rewardOrderHNRsp1.getData().getList());
+
+            }
+        } catch (Exception e){
+            logger.error("日上海南获取订单信息 失败",e);
+            throw new RiBizExecption("日上海南获取订单信息 失败",e);
+        }
+    }
+
+
+
+    /**
+     * 功能描述：获取订单地址等明细信息
+     * @Param:
+     * @param hnReq
+     * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.SubjectListRsp>
+     * @Author:
+     * @Date: 2022/3/13 23:50
+     * @Description:
+     */
+    public HNRsp<OrderDetail> findOrderDetail(HNReq hnReq){
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(cacheUtil.getHNToken(hnReq.getPhone()));
+        getBody.setAPI(RishangHNURL.RSHN_FINDORDERDETAIL.code);
+        getBody.setHost(RISHANG_HOST);
+        Map<String, Object> paramters = new HashMap<>();
+        paramters.put("mainOrderId",hnReq.getMainOrderId());
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
+            if (entityStr != null) {
+
+                HNRsp<OrderDetail> orderDetailHNRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                return orderDetailHNRsp;
+            }
+        } catch (Exception e){
+            logger.error("日上海南获取订单信息 失败",e);
+            throw new RiBizExecption("日上海南获取订单信息 失败",e);
         }
         return null;
     }

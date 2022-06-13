@@ -73,6 +73,51 @@ public interface RSHaiNanService {
     HNRsp<SubjectListRsp> findSubjectList(HNReq hnReq);
 
     /**
+     * 功能描述：获取订单相关信息
+     * @Param:
+     * @param hnReq
+     * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.SubjectListRsp>
+     * @Author:
+     * @Date: 2022/3/13 23:50
+     * @Description:
+     */
+    HNRsp<OrderListRsp> findOrderList(HNReq hnReq);
+
+    /**
+     * 功能描述：获取员工返利相关信息
+     * @Param:
+     * @param hnReq
+     * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.SubjectListRsp>
+     * @Author:
+     * @Date: 2022/3/13 23:50
+     * @Description:
+     */
+    HNRsp<RewardDay> getRewardDay(HNReq hnReq);
+
+    /**
+     * 功能描述：获取员工返利明细相关信息
+     * @Param:
+     * @param hnReq
+     * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.SubjectListRsp>
+     * @Author:
+     * @Date: 2022/3/13 23:50
+     * @Description:
+     */
+    HNRsp<RewardOrder> getRewardOrder(HNReq hnReq);
+
+    /**
+     * 功能描述：获取订单地址等明细信息
+     * @Param:
+     * @param hnReq
+     * @Return: com.crazyloong.cat.rshainan.dto.HNRsp<com.crazyloong.cat.rshainan.dto.SubjectListRsp>
+     * @Author:
+     * @Date: 2022/3/13 23:50
+     * @Description:
+     */
+    HNRsp<OrderDetail> findOrderDetail(HNReq hnReq);
+
+
+    /**
     * 功能描述：下单
     * @Param:
      * @param placeOrderReq

@@ -1,4 +1,4 @@
-package com.crazyloong.cat.rshainan.mybatis.config;
+package com.crazyloong.cat.rshainan.config;
 
 import com.crazyloong.cat.rshainan.mybatis.entity.HnMonitor;
 import com.crazyloong.cat.rshainan.mybatis.service.HnMonitorService;
@@ -26,7 +26,7 @@ public class RSHaiNanTask {
     @Autowired
     private HnMonitorService hnMonitorService;
 
-    @Scheduled(cron = "*/1 * * * * ?")
+    @Scheduled(fixedRate = 1000)
     public void hnExecute(){
         logger.info("海南日上监控任务开始执行");
         // 获取生效的监控任务

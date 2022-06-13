@@ -2,6 +2,8 @@ package com.crazyloong.cat.rshainan.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @Author : crazyloongcat
  * @Date :2022/3/13 21:05
@@ -26,4 +28,9 @@ public class HNReq {
     /*  最后一件商品ID  */
     private String goodsId;
     private String keyword;
+    /* 订单类型  0 - 全部 1 - 待支付 2 - 代发货 3 - 待收货 4 - 已完成*/
+    private String type;
+    private String mainOrderId;
+    private List<RewardDay.ListDTO> mainOrderIds;
+
 }

@@ -37,4 +37,8 @@ public class RiOrderReq extends RiReq{
      * 券码类型
      */
     private String preferentialSum;
+    /**
+    * 认证码
+    */
+    private String firstToken;
 }

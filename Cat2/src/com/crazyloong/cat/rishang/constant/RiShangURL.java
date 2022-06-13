@@ -11,8 +11,11 @@ public enum RiShangURL {
     RISHANG_loginv3("/user/loginv3","登录URL"),
     RISHANG_WISHS("/user/wishs","获取我的订单信息URL"),
     RISHANG_GETVIPCOUPONV2("/rights/getvipcouponv2","获取优惠券相关信息URL"),
-    RISHANG_MALLNEW("/order/mallnew","获取订单信息URL"),
-    RISHANG_GETVIPCOD("/rights/getvipcoupons","获取当前登录用户的优惠券URL");
+    RISHANG_MALLNEW("/order/mallnew/","获取订单信息URL"),
+    RISHANG_GETVIPCOD("/rights/getvipcoupons","获取当前登录用户的优惠券URL"),
+    RISHANG_TOPS("/goods/tops/2","获取日上app首页内容"),
+    RISHANG_SEARCH("/goods/search/1","获取日上app首页内容"),
+    ;
 
     public String code;
     public String name;

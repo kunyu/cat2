@@ -69,7 +69,7 @@ public interface RiShangService {
      * [token, state]
      * com.crazyloong.cat.rishang.dto.RiReturnRsp<com.crazyloong.cat.rishang.dto.WishRsp>
      **/
-    RiReturnRsp<List<Object>> getWishs(String token, Integer state);
+    RiReturnRsp<List<Object>> getWishs(WishReq wishReq);
 
     /**
     * 功能描述：
@@ -82,4 +82,45 @@ public interface RiShangService {
     */
     void placeOrderByCode(RiOrderReq riOrderReq) throws InterruptedException;
 
+    /**
+    * 功能描述： 获取日上app首页内容
+    * @Param:
+    * @Return: com.crazyloong.cat.rishang.dto.RiReturnRsp<java.util.List<com.crazyloong.cat.rishang.dto.GoodsRsp>>
+    * @Author:
+    * @Date: 2022/4/11 20:41
+    * @Description:
+    */
+    RiReturnRsp<List<GoodsRsp>> getTops(String token);
+
+    /**
+    * 功能描述： 查询商品
+    * @Param:
+     * @param key
+    * @Return: com.crazyloong.cat.rishang.dto.RiReturnRsp<java.util.List<com.crazyloong.cat.rishang.dto.GoodsRsp>>
+    * @Author:
+    * @Date: 2022/4/11 20:41
+    * @Description:
+    */
+    RiReturnRsp<List<GoodsRsp>> searchGoods(String token,String key);
+
+    /**
+    * 功能描述：校验token 是否过期
+    * @Param:
+    * @Return: java.lang.Boolean
+    * @Author:
+    * @Date: 2022/4/11 21:05
+    * @Description:
+    */
+    Boolean checkToken(String token);
+
+    /**
+     * 功能描述： 海南日上校验错误信息
+     * @Param:
+     * @param riReturnRsp
+     * @Return: java.lang.Boolean
+     * @Author:
+     * @Date: 2022/3/19 16:29
+     * @Description:
+     */
+    Boolean checkError(RiReturnRsp<?> riReturnRsp);
 }

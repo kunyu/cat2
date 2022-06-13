@@ -9,12 +9,12 @@ import com.crazyloong.cat.rishang.mybatis.service.RiOrderConvolutionCodeService;
 import com.crazyloong.cat.pojo.RSUserList;
 import com.crazyloong.cat.rishang.service.RiShangService;
 import com.crazyloong.cat.util.CacheUtil;
+import com.mysql.jdbc.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -25,7 +25,7 @@ import java.util.*;
 public class RiShangController extends ApiController {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
+    private static final String PHONE = "19912122212";
     @Autowired
     RiShangService riShangService;
     @Autowired
@@ -45,7 +45,7 @@ public class RiShangController extends ApiController {
         List<String> phoneList = riReq.getPhoneList();
         Map<String,String> phoneToken = new HashMap<>();
         phoneList.forEach(phone->{
-            phoneToken.put(phone,"Bearer "+riShangService.login(phone,riReq.getPassword()));
+            phoneToken.put(phone,riShangService.login(phone,riReq.getPassword()));
         });
         cacheUtil.put("phoneToken",phoneToken);
         // 返回第一笔数据的登录token
@@ -54,7 +54,7 @@ public class RiShangController extends ApiController {
 
     @PostMapping("/getwishs")
     public R<List<WishPageRsp>> getwishs(@RequestBody WishReq wishReq){
-        RiReturnRsp<List<Object>> wishsBack = riShangService.getWishs(wishReq.getToken(),wishReq.getType());
+        RiReturnRsp<List<Object>> wishsBack = riShangService.getWishs(wishReq);
         List<Object> wishRspListStr = wishsBack.getData();
         if (wishRspListStr == null || wishRspListStr.size() == 0) {
             return success(null);
@@ -63,8 +63,14 @@ public class RiShangController extends ApiController {
         for (int i = 0; i < wishRspListStr.size(); i++) {
             JSONObject jsonObject = (JSONObject)wishRspListStr.get(i);
             WishRsp wishRsp = jsonObject.toJavaObject(WishRsp.class);
+            PlacedOrderRsp placedOrderRsp = riShangService.getPlacedOrder(wishReq.getToken(), String.valueOf(wishRsp.getId()));
             WishPageRsp wishPageRsp = new WishPageRsp();
+            BeanUtils.copyProperties(wishRsp,wishPageRsp);
+            BeanUtils.copyProperties(placedOrderRsp,wishPageRsp);
+            wishPageRsp.setPrices(placedOrderRsp.getPrices());
+            wishPageRsp.setOprices(placedOrderRsp.getOprices());
             wishPageRsp.setCode(wishRsp.getCode());
+            wishPageRsp.setCreatdate(placedOrderRsp.getCreatdate());
             List<GoodsBean> goodsBeanList = wishRsp.getGoods();
             String abname = "";
             String price = "";
@@ -126,5 +132,31 @@ public class RiShangController extends ApiController {
         return success("下单调用成功，可稍后登录app查看！");
     }
 
+
+    @PostMapping("/getTops")
+    public R<List<GoodsRsp>> getTops() {
+        String token = cacheUtil.getRiToken(PHONE);
+        RiReturnRsp<List<GoodsRsp>> goodsRsp = riShangService.getTops(token);
+        return success(goodsRsp.getData());
+    }
+
+    @PostMapping("/searchGoods")
+    public R<List<GoodsRsp>> searchGoods(@RequestBody WishReq wishReq) {
+        RiReturnRsp<List<GoodsRsp>> goodsRsp = riShangService.searchGoods(cacheUtil.getRiToken(PHONE),wishReq.getKey());
+        return success(goodsRsp.getData());
+    }
+
+    @PostMapping("/setToken")
+    public void setToken(String token) {
+        cacheUtil.setRiFirstToken(token);
+    }
+
+    @PostMapping("/getToken")
+    public R<String> getToken(@RequestBody RiOrderReq riOrderReq) {
+        if (!StringUtils.isNullOrEmpty(riOrderReq.getFirstToken())) {
+            cacheUtil.setRiFirstToken(riOrderReq.getFirstToken());
+        }
+        return success(cacheUtil.getRiToken(riOrderReq.getPhone()));
+    }
 
 }

@@ -18,14 +18,18 @@ public enum RishangHNURL {
     RSHN_GETORDERCOUPON("/infrastructure/getOrderCouponWithGoods","下单前准备2"),
     RSHN_ORDERMEMBERCOUPON("/mini/getOrderMemberCouponListWithGoods","下单前准备3"),
     RSHN_CONFIRMORDER("/core/confirmOrderWithGoods","下单"),
+    RSHN_FINDORDERLIST("/infrastructure/findOrderList","获取订单列表"),
+    RSHN_GETREWARDDAY("/order/getRewardDay","获取员工订单"),
+    RSHN_GETREWARDORDER("/order/getRewardOrder","获取员工订单明细"),
+    RSHN_FINDORDERDETAIL("/infrastructure/findOrderDetail","获取订单地址等明细信息"),
     ;
 
     public String code;
-    public String name;
+    public String desc;
 
-    RishangHNURL(String code,String name) {
+    RishangHNURL(String code,String desc) {
         this.code = code;
-        this.name = name;
+        this.desc = desc;
     }
 
 }

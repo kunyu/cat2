@@ -14,4 +14,12 @@ public class WishPageRsp {
     private String abiid;
     private String num;
     private String price;
+    private String contacts;
+    private String tel;
+    private String address;
+    private String statedesc;
+    private int prices;
+    private int oprices;
+    private String creatdate;
+
 }

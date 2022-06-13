@@ -1,7 +1,10 @@
 package com.crazyloong.cat.util;
 
+import com.mysql.jdbc.StringUtils;
+
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class ObjectUtil {
 
@@ -44,13 +47,24 @@ public class ObjectUtil {
                     int index = labels[j].indexOf(JIAN);
                     labels[j] = labels[j].substring(index+1);
                 }
-                Double discount = Double.valueOf(labels[j]);
+                Double discount = 10.0;
+                if (isNumber(labels[j])) {
+                    discount = Double.valueOf(labels[j]);
+                }
                 if (discount < lowestDiscount) {
                     lowestDiscount = discount;
                 }
             }
         }
         return lowestDiscount;
+    }
+
+    public static boolean isNumber(String str) {
+        if (StringUtils.isNullOrEmpty(str)) {
+            return false;
+        }
+        Pattern pattern = Pattern.compile("^-?\\d+(\\.\\d+)?$");
+        return pattern.matcher(str).matches();
     }
 
 }

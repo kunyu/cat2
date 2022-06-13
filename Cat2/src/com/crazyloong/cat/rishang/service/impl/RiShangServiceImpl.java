@@ -16,6 +16,7 @@ import com.crazyloong.cat.rishang.mybatis.service.RiOrderConvolutionCodeService;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderPlacedService;
 import com.crazyloong.cat.rishang.service.RiShangService;
 import com.crazyloong.cat.rshainan.constant.RishangHNEnum;
+import com.crazyloong.cat.rshainan.dto.HNRsp;
 import com.crazyloong.cat.util.HttpUtil;
 import org.apache.http.HttpEntity;
 import org.slf4j.Logger;
@@ -172,12 +173,11 @@ public class RiShangServiceImpl implements RiShangService {
         try {
             String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
-                RiReturnRsp<PlacedOrderRsp> placedOrderReturn =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<PlacedOrderRsp>>(){});
+                RiReturnRsp<PlacedOrderRsp> placedOrderReturn =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
                 return placedOrderReturn.getData();
             }
         } catch (Exception e){
             logger.error("获取订单信息 失败",e);
-            throw new RiBizExecption("获取订单信息 失败",e);
         }
         return null;
     }
@@ -223,15 +223,19 @@ public class RiShangServiceImpl implements RiShangService {
      * com.crazyloong.cat.rishang.dto.RiReturnRsp<com.crazyloong.cat.rishang.dto.WishRsp>
      **/
     @Override
-    public RiReturnRsp<List<Object>> getWishs(String token, Integer state) {
+    public RiReturnRsp<List<Object>> getWishs(WishReq wishReq) {
         GetBody getBody = new GetBody();
-        getBody.setAuthorization(token);
-        getBody.setAPI(RiShangURL.RISHANG_WISHS.code);
+        getBody.setAuthorization(wishReq.getToken());
+        if ("0".equals(wishReq.getPageNum())) {
+            getBody.setAPI(RiShangURL.RISHANG_WISHS.code);
+        } else {
+            getBody.setAPI(RiShangURL.RISHANG_WISHS.code+"/"+wishReq.getPageNum());
+        }
+
         getBody.setHost(RISHANG_HOST);
         Map<String, Object> paramters = new HashMap<>();
-        paramters.put("state",state);
+        paramters.put("state",wishReq.getType());
         getBody.setParamters(paramters);
-        HttpEntity entity;
         try {
             String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
@@ -268,7 +272,6 @@ public class RiShangServiceImpl implements RiShangService {
         paramters.put("devsys","Android_7.1.2_zh-CN");
         paramters.put("clientid","");
         postBody.setParamters(paramters);
-        HttpEntity entity;
         String tokenStr = "";
         try {
             String entityStr = httpUtil.doPost(postBody,RishangHNEnum.GetType.AUTHORIZATION);
@@ -281,7 +284,7 @@ public class RiShangServiceImpl implements RiShangService {
             logger.error("登陆失败",e);
             throw new RiBizExecption("登陆失败",e);
         }
-        return tokenStr;
+        return "Bearer "+tokenStr;
     }
 
     /**
@@ -318,7 +321,12 @@ public class RiShangServiceImpl implements RiShangService {
         submitOrderReq.setAddress(address.getAddress());
         submitOrderReq.setTel(address.getUserPhone());
         submitOrderReq.setIssue("0");
-        submitOrderReq.setType(2);
+        if (PlaceOrderType.NORMAL.code.equals(riOrderReq.getType())) {
+            submitOrderReq.setType(4);
+        } else {
+            submitOrderReq.setType(2);
+        }
+
         submitOrderReq.setRightscode("-999");
         WishPageRsp wishPageRsp = riOrderReq.getWishPageRsp();
         // 根据订单数量 循环下单
@@ -350,42 +358,129 @@ public class RiShangServiceImpl implements RiShangService {
                         break;
                     }
                 }
-            } else {
+            } else if (PlaceOrderType.userCode.code.equals(riOrderReq.getType())){
                 // 如果下单方式为用户优惠券则获取用户自己的优惠券
                 vipCode = this.getVipCodeMyself(riOrderReq.getToken(), riOrderReq.getPreferentialSum());
             }
-
-            if (vipCode == null) {
+            if (!PlaceOrderType.NORMAL.code.equals(riOrderReq.getType()) && vipCode == null) {
                 throw new RuntimeException("无可用优惠券！");
             }
+
             // 生成订单
             CreateOrderReq createOrderReq = new CreateOrderReq();
-            createOrderReq.setType(2);
+            if (PlaceOrderType.NORMAL.code.equals(riOrderReq.getType())) {
+                createOrderReq.setType(4);
+            } else {
+                createOrderReq.setType(2);
+                createOrderReq.setCouponscode(vipCode.getCode());
+            }
             createOrderReq.setAbiids(abiids);
-            createOrderReq.setCouponscode(vipCode.getCode());
             createOrderReq.setRightscode("-999");
             CreateOrderRsp createOrderRsp = this.createOrder(riOrderReq.getToken(), createOrderReq);
             if (createOrderRsp == null) {
                 throw new RuntimeException("生成订单失败！");
             }
             // 提交订单
-            submitOrderReq.setCouponscode(vipCode.getCode());
+            if (!PlaceOrderType.NORMAL.code.equals(riOrderReq.getType())) {
+                submitOrderReq.setCouponscode(vipCode.getCode());
+            }
             submitOrderReq.setAbiids(abiids);
             submitOrderReq.setWishid(createOrderRsp.getWishid());
-            Integer riReturnRsp = this.submitOrder(riOrderReq.getToken(), submitOrderReq);
-            PlacedOrderRsp placedOrderRsp = this.getPlacedOrder(riOrderReq.getToken(), String.valueOf(riReturnRsp));
-            RiOrderPlaced riOrderPlaced = new RiOrderPlaced();
-            riOrderPlaced.setOrderCode(placedOrderRsp.getSjcode());
-            riOrderPlaced.setOrderUser(riOrderReq.getPhone());
-            riOrderPlaced.setAddressName(placedOrderRsp.getContacts());
-            riOrderPlaced.setAddressPhone(placedOrderRsp.getTel());
-            riOrderPlaced.setAddress(placedOrderRsp.getAddress());
-            riOrderPlaced.setGoodsName(wishPageRsp.getAbname());
-            riOrderPlaced.setGoodsNum(wishPageRsp.getNum());
-            riOrderPlaced.setGoodsPrice(String.valueOf(placedOrderRsp.getPrices()));
-            riOrderPlaced.setGoodsOprice(String.valueOf(placedOrderRsp.getOprices()));
-            riOrderPlacedService.save(riOrderPlaced);
-            Thread.sleep(1000);
+            this.submitOrder(riOrderReq.getToken(), submitOrderReq);
         }
+    }
+
+    /**
+     * 功能描述： 获取日上app首页内容
+     * @Param:
+     * @Return: com.crazyloong.cat.rishang.dto.RiReturnRsp<java.util.List<com.crazyloong.cat.rishang.dto.GoodsRsp>>
+     * @Author:
+     * @Date: 2022/4/11 20:41
+     * @Description:
+     */
+    @Override
+    public RiReturnRsp<List<GoodsRsp>> getTops(String token) {
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(token);
+        getBody.setAPI(RiShangURL.RISHANG_TOPS.code);
+        getBody.setHost(RISHANG_HOST);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.AUTHORIZATION);
+            if (entityStr != null) {
+                RiReturnRsp<List<GoodsRsp>> goodsRspList = JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                CheckFail(goodsRspList);
+                return goodsRspList;
+            }
+        } catch (Exception e){
+            logger.error("获取日上app首页内容 失败",e);
+            throw new RiBizExecption("获取日上app首页内容 失败",e);
+        }
+        return null;
+    }
+
+    /**
+     * 功能描述： 查询商品
+     * @Param:
+     * @param key
+     * @Return: com.crazyloong.cat.rishang.dto.RiReturnRsp<java.util.List<com.crazyloong.cat.rishang.dto.GoodsRsp>>
+     * @Author:
+     * @Date: 2022/4/11 20:41
+     * @Description:
+     */
+    @Override
+    public RiReturnRsp<List<GoodsRsp>> searchGoods(String token,String key) {
+        GetBody getBody = new GetBody();
+        getBody.setAuthorization(token);
+        getBody.setAPI(RiShangURL.RISHANG_SEARCH.code);
+        getBody.setHost(RISHANG_HOST);
+        Map<String, Object> paramters = new HashMap<>();
+        paramters.put("a","a");
+        paramters.put("key",key);
+        getBody.setParamters(paramters);
+        try {
+            String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.AUTHORIZATION);
+            if (entityStr != null) {
+                RiReturnRsp<List<GoodsRsp>> goodsRspList = JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                CheckFail(goodsRspList);
+                return goodsRspList;
+            }
+        } catch (Exception e){
+            logger.error("查询商品 失败",e);
+            throw new RiBizExecption("查询商品 失败",e);
+        }
+        return null;
+    }
+
+    /**
+     * 功能描述：校验token 是否过期
+     * @Param:
+     * @Return: java.lang.Boolean
+     * @Author:
+     * @Date: 2022/4/11 21:05
+     * @Description:
+     */
+    public Boolean checkToken(String token){
+        RiReturnRsp<List<GoodsRsp>> goodsRsp = this.getTops(token);
+        return checkError(goodsRsp);
+    }
+
+    /**
+     * 功能描述： 海南日上校验错误信息
+     * @Param:
+     * @param riReturnRsp
+     * @Return: java.lang.Boolean
+     * @Author:
+     * @Date: 2022/3/19 16:29
+     * @Description:
+     */
+    @Override
+    public Boolean checkError(RiReturnRsp<?> riReturnRsp){
+        if (1024 == riReturnRsp.getCode()) {
+            return false;
+        }
+        if (0 != riReturnRsp.getCode()) {
+            throw new RiBizExecption(riReturnRsp.getError());
+        }
+        return true;
     }
 }

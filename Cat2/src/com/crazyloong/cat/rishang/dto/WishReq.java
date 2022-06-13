@@ -10,5 +10,8 @@ import lombok.Data;
 @Data
 public class WishReq extends RiReq{
     /** 0-未提交 1-已提交 2-已完成**/
-    Integer type;
+    private Integer type;
+    private String key;
+    /*  查询第几页  */
+    private String pageNum;
 }

@@ -1,6 +1,5 @@
 package com.crazyloong.cat.rshainan.service.impl;
 
-import com.crazyloong.cat.execption.RiBizExecption;
 import com.crazyloong.cat.rshainan.dto.GoodsDetailRsp;
 import com.crazyloong.cat.rshainan.dto.HNReq;
 import com.crazyloong.cat.rshainan.dto.HNRsp;
@@ -19,8 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * @Author : crazyloongcat
@@ -83,8 +80,6 @@ public class RSHaiNanTaskServiceImpl implements RSHaiNanTaskService {
                 Integer placedOnceNum = Integer.valueOf(hnMonitor.getPlacedOnceNum());
                 for (int i = 0; i < placedNum / placedOnceNum; i++) {
                     rsHaiNanService.placeOrder(placeOrderReq);
-                    // 等待五秒在下单
-                    Thread.sleep(5000);
                 }
                 hnMonitor.setMonitorStatus("2");
                 hnMonitorService.updateById(hnMonitor);

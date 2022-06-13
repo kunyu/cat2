@@ -5,7 +5,8 @@ package com.crazyloong.cat.rishang.constant;
  */
 public enum PlaceOrderType {
     publicCode("1","公用券码"),
-    userCode("2","用户券码");
+    userCode("2","用户券码"),
+    NORMAL("3","无须券码");
 
     public String code;
     public String name;
