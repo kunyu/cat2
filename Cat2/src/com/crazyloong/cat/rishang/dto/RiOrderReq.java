@@ -41,4 +41,8 @@ public class RiOrderReq extends RiReq{
     * 认证码
     */
     private String firstToken;
+
+    private String myOrderId;
+
+    private int orderNumLimit;
 }

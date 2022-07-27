@@ -94,12 +94,15 @@ public class RiShangController extends ApiController {
     @PostMapping("/checkUnUsedVipCode")
     public R<Boolean> checkUnUsedVipCode(@RequestBody RiReq riReq) throws InterruptedException {
         RiOrderConvolutionCode selectCase = new RiOrderConvolutionCode();
-        selectCase.setInputTime("2022-03-07 21");
         List<RiOrderConvolutionCode> codeList  = riOrderConvolutionCodeService.listCodes(selectCase);
-        //VipCodeRsp vipCode = riShangService.getVipCode(riReq.getToken(),codeList.get(0).getCode());
         for(RiOrderConvolutionCode code: codeList){
-            Thread.sleep(7000);
-            VipCodeRsp vipCode = riShangService.getVipCode(riReq.getToken(),code.getCode());
+            VipCodeRsp vipCode = null;
+            try {
+                vipCode = riShangService.getVipCode(riReq.getToken(),code.getCode());
+            } catch (Exception e) {
+                logger.info("券码查询失败");
+            }
+
             // 如果优惠码无效则更新状态继续查询
             if (vipCode == null) {
                 code.setIsInuse(1);
@@ -109,9 +112,20 @@ public class RiShangController extends ApiController {
                 code.setIsUsed(0);
                 riOrderConvolutionCodeService.saveOrUpdate(code);
             }
+            Thread.sleep(6000);
         }
         return null;
     }
+
+    @PostMapping("/getVipCodeMyself")
+    public R<Boolean> getVipCodeMyself(@RequestBody RiReq riReq) throws InterruptedException {
+        for (int i = 0; i < 100; i++) {
+            riShangService.getVipCodeMyself(riReq.getToken(),"");
+            Thread.sleep(5000);
+        }
+        return null;
+    }
+
 
     @PostMapping("/placeOrderByCode")
     public R<String> placeOrderByCode(@RequestBody RiOrderReq riOrderReq){
@@ -158,5 +172,8 @@ public class RiShangController extends ApiController {
         }
         return success(cacheUtil.getRiToken(riOrderReq.getPhone()));
     }
+
+
+
 
 }

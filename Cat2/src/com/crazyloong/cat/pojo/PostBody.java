@@ -30,4 +30,8 @@ public class PostBody<T> {
     private Map<String, Integer> goods;
 
     private String stockId;
+
+    private String userID;
+
+    private String mobile;
 }

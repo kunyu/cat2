@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.crazyloong.cat.pojo.GetBody;
 import com.crazyloong.cat.pojo.PostBody;
 import com.crazyloong.cat.rshainan.constant.RishangHNEnum;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -76,7 +77,18 @@ public class HttpUtil {
             httpPost.addHeader("token",postBody.getAuthorization());
             httpPost.addHeader("stockId",postBody.getStockId());
         }
-        httpPost.addHeader("Content-Type", "application/json");
+        if (RishangHNEnum.PostType.RS_NEW.equals(type)) {
+            httpPost.addHeader("accessToken",postBody.getAuthorization());
+            if (StringUtils.isNotEmpty(postBody.getUserID())) {
+                httpPost.addHeader("UserID",postBody.getUserID());
+            }
+            if (StringUtils.isNotEmpty(postBody.getMobile())) {
+                httpPost.setHeader("mobile","17600133533");
+            }
+
+        }
+
+        httpPost.addHeader("Content-Type", "application/json; charset=UTF-8");
         httpPost.addHeader("Accept", "*/*");
         httpPost.addHeader("User-Agent", "Mozilla/5.0 (Linux; Android 7.1.2; SM-N976N Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/75.0.3770.143 Mobile Safari/537.36 Html5Plus/1.0");
         CloseableHttpResponse response = null;
@@ -105,12 +117,24 @@ public class HttpUtil {
      * @throws ClientProtocolException
      * @throws IOException
      */
-    public String doHNPost(GetBody getBody) throws Exception{
-        UrlBuilder urlBuilder = new UrlBuilder(getBody);
+    public String doRSNPost(PostBody postBody) throws Exception{
+        UrlBuilder urlBuilder = new UrlBuilder(postBody);
         HttpPost httpPost= new HttpPost(urlBuilder.toString());
-        httpPost.addHeader("token",getBody.getAuthorization());
-        httpPost.addHeader("Content-Type", "application/json");
+        String json = JSONObject.toJSONString(postBody.getParamters());
+        httpPost.setEntity(new StringEntity(json, "utf-8"));
+        httpPost.addHeader("accessToken",postBody.getAuthorization());
+        httpPost.addHeader("UserID",postBody.getUserID());
+        httpPost.setHeader("mobile",postBody.getMobile());
+        httpPost.addHeader("charset","UTF-8");
+        httpPost.addHeader("AppVersion","1.1.4");
+        httpPost.setHeader("ClientID","bnVsbF84M2RkN2RjYmI0YmUyMDYy");
+        httpPost.addHeader("Device","SM-G977N");
+        httpPost.addHeader("OSVersion","Android 9");
+        httpPost.setHeader("Channel","cdfsunrise");
+        httpPost.addHeader("UserSystem","Android");
+        httpPost.addHeader("Content-Type", "application/json; charset=UTF-8");
         httpPost.addHeader("Accept", "*/*");
+        httpPost.addHeader("User-Agent", "okhttp/3.12.0");
         CloseableHttpResponse response = null;
         try {
             response = HttpConnectionPoolUtil.getHttpClient(urlBuilder.toString()).execute(httpPost);

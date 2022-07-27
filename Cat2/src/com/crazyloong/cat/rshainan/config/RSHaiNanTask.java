@@ -26,7 +26,7 @@ public class RSHaiNanTask {
     @Autowired
     private HnMonitorService hnMonitorService;
 
-    @Scheduled(fixedRate = 1000)
+    //@Scheduled(fixedRate = 1000)
     public void hnExecute(){
         logger.info("海南日上监控任务开始执行");
         // 获取生效的监控任务

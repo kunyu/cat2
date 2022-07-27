@@ -2,6 +2,7 @@ package com.crazyloong.cat.rishang.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
+import com.baomidou.mybatisplus.extension.api.R;
 import com.crazyloong.cat.rishang.constant.PlaceOrderType;
 import com.crazyloong.cat.rishang.constant.RiShangURL;
 import com.crazyloong.cat.rishang.dto.*;
@@ -38,8 +39,6 @@ public class RiShangServiceImpl implements RiShangService {
     private RiOrderConvolutionCodeService riOrderConvolutionCodeService;
     @Autowired
     private RiOrderAddressService addressService;
-    @Autowired
-    private RiOrderPlacedService riOrderPlacedService;
     @Autowired
     private HttpUtil httpUtil;
 
@@ -118,7 +117,10 @@ public class RiShangServiceImpl implements RiShangService {
         try {
             String entityStr = httpUtil.doGet(getBody, RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
-                RiReturnRsp<VipCodeRsp> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<VipCodeRsp>>(){});
+                logger.info("优惠券:"+code+" 返回:"+entityStr);
+
+                RiReturnRsp<VipCodeRsp> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                //checkError(vipcode);
                 return vipcode.getData();
             }
         } catch (Exception e){
@@ -137,22 +139,23 @@ public class RiShangServiceImpl implements RiShangService {
         getBody.setAuthorization(token);
         getBody.setAPI(RiShangURL.RISHANG_GETVIPCOD.code);
         getBody.setHost(RISHANG_HOST);
+
         try {
             String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.AUTHORIZATION);
             if (entityStr != null) {
-                RiReturnRsp<List<VipCodeRsp>> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<RiReturnRsp<List<VipCodeRsp>>>(){});
+                logger.info("获取当前登录用户的优惠券"+entityStr);
+                RiReturnRsp<List<VipCodeRsp>> vipcode =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
+                checkError(vipcode);
                 List<VipCodeRsp> vipCodeRspList = vipcode.getData();
-                if (vipCodeRspList != null) {
-                    for (int i = 0; i < vipCodeRspList.size(); i++) {
-                        if (vipCodeRspList.get(i).getTitle().contains(preferentialSum)) {
-                            return vipCodeRspList.get(i);
-                        }
+                for (VipCodeRsp vipCodeRsp: vipCodeRspList) {
+                    if (vipCodeRsp.getTitle().contains(preferentialSum)) {
+                        return vipCodeRsp;
                     }
                 }
+
             }
         } catch (Exception e){
             logger.error("获取优惠券信息 失败",e);
-            throw new RiBizExecption("获取优惠券信息 失败",e);
         }
         return null;
     }
@@ -330,15 +333,9 @@ public class RiShangServiceImpl implements RiShangService {
         submitOrderReq.setRightscode("-999");
         WishPageRsp wishPageRsp = riOrderReq.getWishPageRsp();
         // 根据订单数量 循环下单
+        int success = 0;
         for (int i = 0; i < riOrderReq.getOrderNum(); i++) {
-            List<Integer> abiids = new ArrayList<>();
-            // 加入购物车
-            List<String> abiidList = Arrays.asList(wishPageRsp.getAbiid().split(","));
-            List<String> numList = Arrays.asList(wishPageRsp.getNum().split(","));
-            for (int j = 0; j < abiidList.size(); j++) {
-                abiids.add(Integer.parseInt(abiidList.get(j)));
-                this.addCart(Integer.parseInt(abiidList.get(j)), Integer.parseInt(numList.get(j)), riOrderReq.getToken());
-            }
+            long start = System.currentTimeMillis();
             VipCodeRsp vipCode = null;
             if (PlaceOrderType.publicCode.code.equals(riOrderReq.getType())) {
                 // 获取优惠券信息
@@ -346,8 +343,14 @@ public class RiShangServiceImpl implements RiShangService {
                 selectCase.setIsInuse(0);
                 selectCase.setIsUsed(0);
                 List<RiOrderConvolutionCode> codeList = riOrderConvolutionCodeService.listCodes(selectCase);
+                int checkCodeNum = 0;
                 for (RiOrderConvolutionCode code : codeList) {
-                    vipCode = this.getVipCode(riOrderReq.getToken(), code.getCode());
+                    try {
+                        vipCode = this.getVipCode(riOrderReq.getToken(), code.getCode());
+                    } catch (RiBizExecption riBizExecption) {
+                        logger.info("服务异常"+riBizExecption.getMessage());
+                        continue;
+                    }
                     // 如果优惠码无效则更新状态继续查询
                     code.setIsInuse(1);
                     if (vipCode == null) {
@@ -357,13 +360,32 @@ public class RiShangServiceImpl implements RiShangService {
                         riOrderConvolutionCodeService.saveOrUpdate(code);
                         break;
                     }
+                    checkCodeNum ++ ;
+                    if (checkCodeNum >5) {
+                        Thread.sleep(5000);
+                    }
                 }
             } else if (PlaceOrderType.userCode.code.equals(riOrderReq.getType())){
                 // 如果下单方式为用户优惠券则获取用户自己的优惠券
-                vipCode = this.getVipCodeMyself(riOrderReq.getToken(), riOrderReq.getPreferentialSum());
+                try {
+                    vipCode = this.getVipCodeMyself(riOrderReq.getToken(), riOrderReq.getPreferentialSum());
+                } catch (RiBizExecption riBizExecption) {
+                    logger.info("服务异常"+riBizExecption.getMessage());
+                    continue;
+                }
             }
+            // 如果无优惠券则重新查询
             if (!PlaceOrderType.NORMAL.code.equals(riOrderReq.getType()) && vipCode == null) {
-                throw new RuntimeException("无可用优惠券！");
+                continue;
+            }
+
+            List<Integer> abiids = new ArrayList<>();
+            // 加入购物车
+            List<String> abiidList = Arrays.asList(wishPageRsp.getAbiid().split(","));
+            List<String> numList = Arrays.asList(wishPageRsp.getNum().split(","));
+            for (int j = 0; j < abiidList.size(); j++) {
+                abiids.add(Integer.parseInt(abiidList.get(j)));
+                this.addCart(Integer.parseInt(abiidList.get(j)), Integer.parseInt(numList.get(j)), riOrderReq.getToken());
             }
 
             // 生成订单
@@ -376,9 +398,12 @@ public class RiShangServiceImpl implements RiShangService {
             }
             createOrderReq.setAbiids(abiids);
             createOrderReq.setRightscode("-999");
-            CreateOrderRsp createOrderRsp = this.createOrder(riOrderReq.getToken(), createOrderReq);
-            if (createOrderRsp == null) {
-                throw new RuntimeException("生成订单失败！");
+            CreateOrderRsp createOrderRsp = null;
+            try {
+                createOrderRsp = this.createOrder(riOrderReq.getToken(), createOrderReq);
+            } catch (RiBizExecption e) {
+                logger.info("生成订单异常"+e.getMessage());
+                continue;
             }
             // 提交订单
             if (!PlaceOrderType.NORMAL.code.equals(riOrderReq.getType())) {
@@ -386,8 +411,21 @@ public class RiShangServiceImpl implements RiShangService {
             }
             submitOrderReq.setAbiids(abiids);
             submitOrderReq.setWishid(createOrderRsp.getWishid());
-            this.submitOrder(riOrderReq.getToken(), submitOrderReq);
+            try {
+                this.submitOrder(riOrderReq.getToken(), submitOrderReq);
+                success++;
+            } catch (RiBizExecption e) {
+                logger.info("生成订单异常"+e.getMessage());
+                continue;
+            }
+            logger.info(address.getUserName()+" 第"+ i +" 下单成功！");
+            // 保证每5秒下一单
+            long useTime = (System.currentTimeMillis()-start);
+            if (6000 - useTime > 0) {
+                Thread.sleep(6000 - useTime);
+            }
         }
+        logger.info(address.getUserName()+" 下单完毕 成功下单："+success+" 单");
     }
 
     /**
@@ -475,10 +513,7 @@ public class RiShangServiceImpl implements RiShangService {
      */
     @Override
     public Boolean checkError(RiReturnRsp<?> riReturnRsp){
-        if (1024 == riReturnRsp.getCode()) {
-            return false;
-        }
-        if (0 != riReturnRsp.getCode()) {
+        if (!riReturnRsp.getSuccess()) {
             throw new RiBizExecption(riReturnRsp.getError());
         }
         return true;

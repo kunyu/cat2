@@ -9,6 +9,7 @@
         <result property="inputTime" column="INPUT_TIME" jdbcType="VARCHAR"/>
         <result property="updateTime" column="UPDATE_TIME" jdbcType="VARCHAR"/>
         <result property="remark" column="REMARK" jdbcType="VARCHAR"/>
+        <result property="type" column="TYPE" jdbcType="VARCHAR"/>
     </resultMap>
 
     

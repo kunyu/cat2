@@ -8,6 +8,19 @@ public interface RishangHNEnum {
     enum GetType{
         TOKEN,
         AUTHORIZATION,
-        HN_ONCE_LOGIN,;
+        HN_ONCE_LOGIN,
+        NONE,
+        ;
+    }
+
+    /**
+     * HTTP POST登录方式
+     */
+    enum PostType{
+        TOKEN,
+        AUTHORIZATION,
+        HN_ONCE_LOGIN,
+        RS_NEW,
+        ;
     }
 }

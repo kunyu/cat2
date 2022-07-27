@@ -69,6 +69,7 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
                     // 进行第二次登录
                     String entityStrTwice = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
                     HNRsp<LoginRsp> loginRspHNRspTwice =  JSONObject.parseObject(entityStrTwice,new TypeReference<>(){});
+                    logger.info("日上海南登录"+entityStrTwice);
                     if (loginRspHNRspTwice.getData() != null) {
                         return loginRspHNRspTwice.getData().getToken();
                     } else {
@@ -115,6 +116,7 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
         getBody.setParamters(paramters);
         try {
             String entityStr = httpUtil.doGet(getBody, RishangHNEnum.GetType.TOKEN);
+            logger.info("日上海南获取商品列表"+entityStr);
             if (entityStr != null) {
                 HNRsp<GoodsListRsp> goodsListRspHNRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
                 return goodsListRspHNRsp;
@@ -157,6 +159,7 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
         try {
             String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
             if (entityStr != null) {
+                logger.info("日上海南获取分类列表"+entityStr);
                 HNRsp<GoodsListSearchRsp> goodsListSearchRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
                 return goodsListSearchRsp;
             }
@@ -215,6 +218,7 @@ public class RSHaiNanServiceImpl implements RSHaiNanService {
         try {
             String entityStr = httpUtil.doGet(getBody,RishangHNEnum.GetType.TOKEN);
             if (entityStr != null) {
+                //logger.info("日上海南根据商品ID获取商品详情"+entityStr);
                 HNRsp<GoodsDetailRsp> GoodsDetailRsp =  JSONObject.parseObject(entityStr,new TypeReference<>(){});
                 return GoodsDetailRsp;
             }

@@ -4,6 +4,9 @@ import com.crazyloong.cat.execption.RiBizExecption;
 import com.crazyloong.cat.rishang.mybatis.entity.RiOrderPhone;
 import com.crazyloong.cat.rishang.mybatis.service.RiOrderPhoneService;
 import com.crazyloong.cat.rishang.service.RiShangService;
+import com.crazyloong.cat.rsNew.dto.RSNewUserInfo;
+import com.crazyloong.cat.rsNew.dto.UserEntity;
+import com.crazyloong.cat.rsNew.service.RSNewService;
 import com.crazyloong.cat.rshainan.dto.HNReq;
 import com.crazyloong.cat.rshainan.dto.TokenEntity;
 import com.crazyloong.cat.rshainan.service.RSHaiNanService;
@@ -29,6 +32,8 @@ public class CacheUtil {
     private RiOrderPhoneService riOrderPhoneService;
     @Autowired
     private RiShangService riShangService;
+    @Autowired
+    private RSNewService rsNewService;
     @Autowired
     private CacheManager cacheManager;
 
@@ -123,6 +128,43 @@ public class CacheUtil {
                 this.put("RiToken",riToken);
             }
             return token.get();
+        }
+    }
+
+    /**
+     * 功能描述： 缓存中获取token 校验token是否过期  过期重新登录
+     * @Param:
+     * @param phone
+     * @Return: java.lang.String
+     * @Author:
+     * @Date: 2022/3/21 20:41
+     * @Description:
+     */
+    public synchronized RSNewUserInfo getRSNewToken(String phone){
+        Map<String, UserEntity> rsNewToken =  this.get("RSNewToken", Map.class);
+        if (rsNewToken == null ) {
+            rsNewToken = new HashMap<>();
+            RSNewUserInfo userInfo = rsNewService.login(phone);
+            rsNewToken.put(phone,new UserEntity(userInfo));
+            this.put("RSNewToken",rsNewToken);
+            return userInfo;
+        } else {
+            AtomicReference<RSNewUserInfo> rsNewUserInfo = new AtomicReference<>();
+            rsNewToken.forEach((key,value)->{
+                if (key.equals(phone)) {
+                    if (System.currentTimeMillis() - value.getLastPutTime() < 30*60*1000) {
+                        // 未过30分钟超时时间 返回缓存的值
+                        rsNewUserInfo.set(value.getUserInfo());
+                    }
+                }
+            });
+            if (rsNewUserInfo.get() == null ) {
+                RSNewUserInfo user = rsNewService.login(phone);
+                rsNewUserInfo.set(user);
+                rsNewToken.put(phone,new UserEntity(rsNewUserInfo.get()));
+                this.put("RSNewToken",rsNewToken);
+            }
+            return rsNewUserInfo.get();
         }
     }
 

@@ -33,6 +33,10 @@ public class RiOrderPhone extends Model<RiOrderPhone> {
     private String updateTime;
     //备注
     private String remark;
+    // 账号类型
+    private String type;
+    // 是否为新账号 0-新 1-旧
+    private Integer isNew;
 
 
     /**

@@ -7,8 +7,6 @@ import com.crazyloong.cat.rshainan.constant.RishangHNSuccess;
 import com.crazyloong.cat.rshainan.dto.*;
 import com.crazyloong.cat.rshainan.service.RSHaiNanService;
 import com.crazyloong.cat.util.CacheUtil;
-import com.crazyloong.cat.util.ExcelUtil;
-import com.mysql.jdbc.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
